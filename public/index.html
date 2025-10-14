@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Hub Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <header class="dashboard__header">
+        <div>
+          <h1>Family Home Hub</h1>
+          <p id="last-updated">Loading data…</p>
+        </div>
+        <div class="clock" id="clock"></div>
+      </header>
+
+      <main class="dashboard__grid">
+        <section class="card card--weather">
+          <h2>Weather</h2>
+          <div id="weather" class="card__content">Loading weather…</div>
+        </section>
+
+        <section class="card card--transit">
+          <h2>Rail Departures</h2>
+          <div id="rail" class="card__content">Loading train times…</div>
+        </section>
+
+        <section class="card card--transit">
+          <h2>Bus Departures</h2>
+          <div id="bus" class="card__content">Loading bus times…</div>
+        </section>
+
+        <section class="card card--news">
+          <h2>Local Headlines</h2>
+          <div id="news" class="card__content card__content--scroll">Loading news…</div>
+        </section>
+
+        <section class="card card--calendar">
+          <h2>Family Calendar</h2>
+          <div class="card__content">
+            <iframe
+              id="calendar-frame"
+              title="Family calendar"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              src=""
+              allowtransparency="true"
+            ></iframe>
+            <p id="calendar-placeholder" class="placeholder">Add CALENDAR_EMBED_URL in your .env file to show the calendar.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
