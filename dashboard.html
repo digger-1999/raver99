@@ -273,6 +273,40 @@
       border: 1px solid rgba(88, 166, 255, 0.25);
     }
 
+    /* ══ CALENDAR ════════════════════════════════════ */
+    .cal-section { margin-bottom: 0.9rem; }
+    .cal-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .cal-event {
+      display: flex; flex-direction: column; gap: 0.25rem;
+      padding: 0.7rem 1rem; background: var(--surface2);
+      border-radius: 8px; border-left: 3px solid var(--orange);
+      margin-bottom: 0.45rem;
+    }
+    .cal-event.urgent { border-left-color: var(--red); }
+    .cal-event.tomorrow { border-left-color: var(--border); opacity: 0.75; }
+    .cal-event-title { font-size: 0.92rem; font-weight: 500; }
+    .cal-reminder {
+      font-size: 0.8rem; font-weight: 600; color: var(--orange);
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .cal-reminder.urgent { color: var(--red); }
+    .cal-empty {
+      padding: 0.7rem 1rem; background: var(--surface2);
+      border-radius: 8px; font-size: 0.9rem; color: var(--green);
+    }
+    .cal-setup {
+      padding: 0.9rem 1rem; background: var(--surface2);
+      border-radius: 8px; font-size: 0.82rem; color: var(--muted);
+      line-height: 1.6; border: 1px dashed var(--border);
+    }
+    .cal-setup code {
+      background: var(--bg); padding: 0.15rem 0.4rem;
+      border-radius: 4px; color: var(--accent); font-size: 0.78rem;
+    }
+
     /* ══ STATUS / LOADING ════════════════════════════ */
     .loading { color: var(--muted); font-size: 0.875rem; animation: pulse 1.5s ease-in-out infinite; }
     .error   { color: var(--red);   font-size: 0.875rem; }
@@ -297,6 +331,12 @@
     <div id="date">Loading…</div>
     <div id="affirmation-bar"><span class="loading">Loading your affirmation…</span></div>
   </header>
+
+  <!-- ── CALENDAR ─────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title"><span class="dot orange"></span>School Calendar &mdash; Today &amp; Tomorrow</div>
+    <div id="cal-wrap"><span class="loading">Loading calendar…</span></div>
+  </div>
 
   <!-- ── ROW 1: Weather + News ─────────────────────── -->
   <div class="grid">
@@ -623,6 +663,130 @@
     }
     fetchNews();
     setInterval(fetchNews, 30 * 60 * 1000);
+
+    // ═══════════════════════════════════════════════════
+    //  SCHOOL CALENDAR  — fetches /cal (nginx proxy)
+    // ═══════════════════════════════════════════════════
+    function icalUnfold(t) { return t.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,''); }
+
+    function icalDate(str) {
+      if (!str) return null;
+      const s = str.replace(/[TZ:\-]/g,'');
+      const y=+s.slice(0,4), m=+s.slice(4,6)-1, d=+s.slice(6,8);
+      return isNaN(y) ? null : new Date(y,m,d);
+    }
+
+    function parseICal(raw) {
+      const lines = icalUnfold(raw).split(/\r?\n/);
+      const events = []; let e = null;
+      for (const line of lines) {
+        if (line==='BEGIN:VEVENT') { e={}; continue; }
+        if (line==='END:VEVENT')   { if(e) events.push(e); e=null; continue; }
+        if (!e) continue;
+        const ci = line.indexOf(':'); if (ci<0) continue;
+        const prop = line.slice(0,ci), val = line.slice(ci+1);
+        const base = prop.split(';')[0].toUpperCase();
+        if (base==='DTSTART') {
+          e.DTSTART=val;
+          e.ALLDAY = prop.toUpperCase().includes('VALUE=DATE') || /^\d{8}$/.test(val);
+        } else if (base==='EXDATE') {
+          e.EXDATES = (e.EXDATES||[]).concat(val.split(',').map(v=>icalDate(v.trim())));
+        } else { e[base]=val; }
+      }
+      return events;
+    }
+
+    const DOW = {SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+
+    function occursOn(e, t) {
+      if (!e.DTSTART) return false;
+      const start = icalDate(e.DTSTART);
+      if (!start) return false;
+      const day = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+      if (e.EXDATES?.some(d=>d&&d.toDateString()===day.toDateString())) return false;
+      if (!e.RRULE) return start.toDateString()===day.toDateString();
+      if (start>day) return false;
+      const rule = Object.fromEntries(e.RRULE.split(';').map(p=>p.split('=')));
+      if (rule.UNTIL && icalDate(rule.UNTIL) < day) return false;
+      const iv = parseInt(rule.INTERVAL||'1');
+      if (rule.FREQ==='DAILY') {
+        return Math.round((day-start)/86400000)%iv===0;
+      }
+      if (rule.FREQ==='WEEKLY') {
+        const days = rule.BYDAY?.split(',').map(d=>d.replace(/[+\-\d]/g,''))||null;
+        if (days && !days.some(d=>DOW[d]===day.getDay())) return false;
+        if (!days && start.getDay()!==day.getDay()) return false;
+        const s0=new Date(start); s0.setDate(s0.getDate()-s0.getDay());
+        const t0=new Date(day);   t0.setDate(t0.getDate()-t0.getDay());
+        return Math.round((t0-s0)/(7*86400000))%iv===0;
+      }
+      if (rule.FREQ==='MONTHLY') return start.getDate()===day.getDate();
+      if (rule.FREQ==='YEARLY')  return start.getMonth()===day.getMonth()&&start.getDate()===day.getDate();
+      return false;
+    }
+
+    function calReminder(summary) {
+      const s=(summary||'').toLowerCase();
+      if (/\bpe\b|p\.e\.|gym|sport/.test(s))        return {msg:"Don't forget PE kit!",     urgent:true,  icon:'&#128759;'};
+      if (/swim/.test(s))                             return {msg:"Pack swimming kit + towel!",urgent:true,  icon:'&#127946;'};
+      if (/trip|excursion|visit/.test(s))             return {msg:"Permission slip & packed lunch!",urgent:true,icon:'&#127759;'};
+      if (/non.?uniform|mufti|own clothes/.test(s))  return {msg:"Wear own clothes today!",  urgent:false, icon:'&#128083;'};
+      if (/parents.?evening|consultation/.test(s))   return {msg:"Parents' evening tonight!",urgent:true,  icon:'&#128203;'};
+      if (/concert|perform|show|production/.test(s)) return {msg:"Performance today!",       urgent:false, icon:'&#127917;'};
+      if (/packed lunch/.test(s))                    return {msg:"Packed lunch needed!",     urgent:true,  icon:'&#127857;'};
+      if (/money|dinner/.test(s))                    return {msg:"Remember dinner money!",   urgent:false, icon:'&#128181;'};
+      return null;
+    }
+
+    function renderCalEvents(events, date, cssClass) {
+      const today = events.filter(e=>e.ALLDAY && occursOn(e,date));
+      if (!today.length) return cssClass ? '' :
+        '<div class="cal-empty">&#10003; Nothing on today — clear day!</div>';
+      return today.map(e=>{
+        const r = calReminder(e.SUMMARY||'');
+        const urgent = r?.urgent ? ' urgent' : '';
+        return `<div class="cal-event${urgent}${cssClass?' '+cssClass:''}">
+          <div class="cal-event-title">&#128197; ${e.SUMMARY||'(no title)'}</div>
+          ${r?`<div class="cal-reminder${r.urgent?' urgent':''}">${r.icon} ${r.msg}</div>`:''}
+        </div>`;
+      }).join('');
+    }
+
+    async function fetchCalendar() {
+      const wrap = document.getElementById('cal-wrap');
+      try {
+        const res = await fetch('/cal');
+        if (res.status===404) throw new Error('proxy_not_configured');
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const text = await res.text();
+        if (!text.includes('BEGIN:VCALENDAR')) throw new Error('not_ical');
+        const events = parseICal(text);
+        const today    = new Date();
+        const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+        wrap.innerHTML =
+          '<div class="cal-section"><div class="cal-label">Today</div>'
+          + renderCalEvents(events,today,'') + '</div>'
+          + '<div class="cal-section"><div class="cal-label">Tomorrow &mdash; heads up</div>'
+          + (renderCalEvents(events,tomorrow,'tomorrow')||'<div class="cal-empty" style="opacity:.6">Nothing on tomorrow</div>')
+          + '</div>';
+      } catch(err) {
+        if (err.message==='proxy_not_configured'||err.message==='not_ical') {
+          wrap.innerHTML = `<div class="cal-setup">
+            <strong>One-time nginx setup needed.</strong><br>
+            Add this to your nginx server block, then reload nginx:<br><br>
+            <code>location /cal {</code><br>
+            <code>&nbsp;&nbsp;proxy_pass YOUR_GOOGLE_ICAL_URL;</code><br>
+            <code>&nbsp;&nbsp;proxy_ssl_server_name on;</code><br>
+            <code>}</code><br><br>
+            See <strong>nginx-calendar-setup.txt</strong> in the repo for full instructions.
+          </div>`;
+        } else {
+          wrap.innerHTML = `<span class="error">&#9888; Calendar unavailable (${err.message})</span>`;
+        }
+      }
+    }
+    fetchCalendar();
+    setInterval(fetchCalendar, 15*60*1000);
 
     // ═══════════════════════════════════════════════════
     //  FOOTER
