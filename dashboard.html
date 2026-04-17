@@ -631,12 +631,20 @@
     setInterval(fetchWeather, 10 * 60 * 1000);
 
     // ═══════════════════════════════════════════════════
-    //  NEWS  — direct BBC RSS parse (no third-party proxy)
+    //  CORS PROXY HELPER  (allorigins.win — public data only)
+    // ═══════════════════════════════════════════════════
+    async function corsGet(url) {
+      const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      return data.contents;
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  NEWS  — BBC RSS via CORS proxy
     // ═══════════════════════════════════════════════════
     async function parseRSS(url, count) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const txt = await res.text();
+      const txt = await corsGet(url);
       const xml = new DOMParser().parseFromString(txt, 'text/xml');
       return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
         title: el.querySelector('title')?.textContent?.trim() || '',
@@ -684,9 +692,8 @@
     async function fetchTrains() {
       const wrap = document.getElementById('transport-wrap');
       try {
-        const res = await fetch('https://huxley2.azurewebsites.net/departures/KGN/6');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
+        const txt  = await corsGet('https://huxley2.azurewebsites.net/departures/KGN/6');
+        const data = JSON.parse(txt);
         const svcs = data.trainServices || [];
 
         const trainRows = svcs.length ? svcs.slice(0, 5).map(s => {
@@ -821,10 +828,9 @@
       const wrap = document.getElementById('cal-wrap');
       try {
         const res = await fetch('/cal');
-        if (res.status===404) throw new Error('proxy_not_configured');
-        if (!res.ok) throw new Error('HTTP '+res.status);
+        if (!res.ok) throw new Error('proxy_not_configured');
         const text = await res.text();
-        if (!text.includes('BEGIN:VCALENDAR')) throw new Error('not_ical');
+        if (!text.includes('BEGIN:VCALENDAR')) throw new Error('proxy_not_configured');
         const events = parseICal(text);
         const today    = new Date();
         const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
@@ -835,7 +841,7 @@
           + (renderCalEvents(events,tomorrow,'tomorrow')||'<div class="cal-empty" style="opacity:.6">Nothing on tomorrow</div>')
           + '</div>';
       } catch(err) {
-        if (err.message==='proxy_not_configured'||err.message==='not_ical') {
+        if (err.message==='proxy_not_configured') {
           wrap.innerHTML = `<div class="cal-setup">
             <strong>One-time nginx setup needed.</strong><br>
             Add this to your nginx server block, then reload nginx:<br><br>
