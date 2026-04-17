@@ -307,6 +307,39 @@
       border-radius: 4px; color: var(--accent); font-size: 0.78rem;
     }
 
+    /* ══ TRANSPORT LIVE ══════════════════════════════ */
+    .dep-section { margin-bottom: 0.9rem; }
+    .dep-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .dep-row {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.55rem 0.75rem; background: var(--surface2);
+      border-radius: 7px; margin-bottom: 0.35rem; font-size: 0.875rem;
+    }
+    .dep-time { font-weight: 700; min-width: 3.2rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+    .dep-dest { flex: 1; }
+    .dep-plat { font-size: 0.72rem; color: var(--muted); }
+    .on-time   { color: var(--green);  font-size: 0.8rem; font-weight: 600; }
+    .delayed   { color: var(--yellow); font-size: 0.8rem; font-weight: 600; }
+    .cancelled { color: var(--red);    font-size: 0.8rem; font-weight: 600; text-decoration: line-through; }
+    .dep-bus-row {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.75rem; background: var(--surface2);
+      border-radius: 7px; margin-bottom: 0.35rem;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .dep-empty { font-size: 0.875rem; color: var(--muted); padding: 0.5rem 0; }
+
+    /* ══ NEWS SECTIONS ═══════════════════════════════ */
+    .news-section { margin-bottom: 1rem; }
+    .news-section:last-child { margin-bottom: 0; }
+    .news-section-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    }
+
     /* ══ STATUS / LOADING ════════════════════════════ */
     .loading { color: var(--muted); font-size: 0.875rem; animation: pulse 1.5s ease-in-out infinite; }
     .error   { color: var(--red);   font-size: 0.875rem; }
@@ -349,8 +382,15 @@
 
     <!-- News -->
     <div class="card">
-      <div class="card-title"><span class="dot yellow"></span>Top Headlines</div>
-      <div id="news-wrap"><span class="loading">Loading news…</span></div>
+      <div class="card-title"><span class="dot yellow"></span>Birmingham News &amp; BCFC</div>
+      <div class="news-section">
+        <div class="news-section-label">&#128505; West Midlands</div>
+        <div id="news-brum-wrap"><span class="loading">Loading…</span></div>
+      </div>
+      <div class="news-section">
+        <div class="news-section-label" style="color:#005daa">&#9917; Birmingham City</div>
+        <div id="news-bcfc-wrap"><span class="loading">Loading…</span></div>
+      </div>
     </div>
 
   </div>
@@ -361,53 +401,7 @@
     <!-- Transport -->
     <div class="card">
       <div class="card-title"><span class="dot green"></span>West Midlands Transport</div>
-      <div class="transport-grid">
-
-        <a class="transport-item"
-           href="https://www.networkwestmidlands.com/bus/find-a-bus/45/"
-           target="_blank" rel="noopener">
-          <span class="transport-badge badge-bus">45</span>
-          <div class="transport-info">
-            <div class="transport-name">Bus 45</div>
-            <div class="transport-sub">Redditch &ndash; Birmingham City Centre</div>
-          </div>
-          <span class="transport-arrow">&#8599;</span>
-        </a>
-
-        <a class="transport-item"
-           href="https://www.networkwestmidlands.com/bus/find-a-bus/49/"
-           target="_blank" rel="noopener">
-          <span class="transport-badge badge-bus">49</span>
-          <div class="transport-info">
-            <div class="transport-name">Bus 49</div>
-            <div class="transport-sub">Solihull &ndash; Birmingham City Centre</div>
-          </div>
-          <span class="transport-arrow">&#8599;</span>
-        </a>
-
-        <a class="transport-item"
-           href="https://www.nationalrail.co.uk/stations/KGN/"
-           target="_blank" rel="noopener">
-          <span class="transport-badge badge-train">&#128644;</span>
-          <div class="transport-info">
-            <div class="transport-name">Kings Norton</div>
-            <div class="transport-sub">Live departures &bull; National Rail</div>
-          </div>
-          <span class="transport-arrow">&#8599;</span>
-        </a>
-
-        <a class="transport-item"
-           href="https://journeyplanner.networkwestmidlands.com/"
-           target="_blank" rel="noopener">
-          <span class="transport-badge badge-bus" style="font-size:0.85rem;">&#128506;</span>
-          <div class="transport-info">
-            <div class="transport-name">Journey Planner</div>
-            <div class="transport-sub">Network West Midlands</div>
-          </div>
-          <span class="transport-arrow">&#8599;</span>
-        </a>
-
-      </div>
+      <div id="transport-wrap"><span class="loading">Loading departures…</span></div>
     </div>
 
     <!-- Family Links -->
@@ -637,32 +631,103 @@
     setInterval(fetchWeather, 10 * 60 * 1000);
 
     // ═══════════════════════════════════════════════════
-    //  NEWS  (BBC via rss2json.com — free, no key needed)
+    //  NEWS  — direct BBC RSS parse (no third-party proxy)
     // ═══════════════════════════════════════════════════
-    const NEWS_URL =
-      'https://api.rss2json.com/v1/api.json' +
-      '?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Frss.xml' +
-      '&count=6';
+    async function parseRSS(url, count) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const txt = await res.text();
+      const xml = new DOMParser().parseFromString(txt, 'text/xml');
+      return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
+        title: el.querySelector('title')?.textContent?.trim() || '',
+        link:  el.querySelector('link')?.nextSibling?.nodeValue?.trim() ||
+               el.querySelector('guid')?.textContent?.trim() || '#'
+      }));
+    }
 
-    async function fetchNews() {
-      const wrap = document.getElementById('news-wrap');
+    function renderNewsItems(items) {
+      return items.map((item, i) => `
+        <a class="news-item" href="${item.link}" target="_blank" rel="noopener">
+          <span class="news-num">${i + 1}</span>
+          <span class="news-headline">${item.title}</span>
+        </a>`).join('');
+    }
+
+    async function fetchBrumNews() {
+      const wrap = document.getElementById('news-brum-wrap');
       try {
-        const res  = await fetch(NEWS_URL);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        if (data.status !== 'ok' || !data.items?.length) throw new Error('No items');
-
-        wrap.innerHTML = data.items.slice(0, 6).map((item, i) => `
-          <a class="news-item" href="${item.link}" target="_blank" rel="noopener">
-            <span class="news-num">${i + 1}</span>
-            <span class="news-headline">${item.title}</span>
-          </a>`).join('');
-      } catch (err) {
-        wrap.innerHTML = `<span class="error">&#9888; News unavailable (${err.message})</span>`;
+        const items = await parseRSS('https://feeds.bbci.co.uk/news/england/west_midlands/rss.xml', 5);
+        wrap.innerHTML = renderNewsItems(items);
+      } catch(err) {
+        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
       }
     }
-    fetchNews();
-    setInterval(fetchNews, 30 * 60 * 1000);
+
+    async function fetchBCFC() {
+      const wrap = document.getElementById('news-bcfc-wrap');
+      try {
+        const items = await parseRSS('https://feeds.bbci.co.uk/sport/football/teams/birmingham-city/rss.xml', 4);
+        wrap.innerHTML = renderNewsItems(items);
+      } catch(err) {
+        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
+      }
+    }
+
+    fetchBrumNews();
+    fetchBCFC();
+    setInterval(fetchBrumNews, 30 * 60 * 1000);
+    setInterval(fetchBCFC,     30 * 60 * 1000);
+
+    // ═══════════════════════════════════════════════════
+    //  TRANSPORT — live trains via Huxley2, buses static
+    // ═══════════════════════════════════════════════════
+    async function fetchTrains() {
+      const wrap = document.getElementById('transport-wrap');
+      try {
+        const res = await fetch('https://huxley2.azurewebsites.net/departures/KGN/6');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const svcs = data.trainServices || [];
+
+        const trainRows = svcs.length ? svcs.slice(0, 5).map(s => {
+          const dest = s.destination?.[0]?.locationName || 'Unknown';
+          const etd  = s.etd === 'On time'  ? '<span class="on-time">On time</span>'
+                     : s.etd === 'Cancelled' ? '<span class="cancelled">Cancelled</span>'
+                     : `<span class="delayed">${s.etd}</span>`;
+          const plat = s.platform ? `<span class="dep-plat">Plat ${s.platform}</span>` : '';
+          return `<div class="dep-row">
+            <span class="dep-time">${s.std}</span>
+            <span class="dep-dest">${dest}</span>
+            ${etd}${plat}
+          </div>`;
+        }).join('') : '<div class="dep-empty">No services currently scheduled</div>';
+
+        wrap.innerHTML = `
+          <div class="dep-section">
+            <div class="dep-label">&#128644; Kings Norton — next departures</div>
+            ${trainRows}
+          </div>
+          <div class="dep-section">
+            <div class="dep-label">&#128652; Buses from Kings Norton</div>
+            <div class="dep-bus-row">
+              <span class="transport-badge badge-bus">45</span>
+              <span>Redditch &harr; Birmingham &mdash; approx every 10&ndash;12 mins</span>
+            </div>
+            <div class="dep-bus-row">
+              <span class="transport-badge badge-bus">49</span>
+              <span>Solihull &harr; Birmingham &mdash; approx every 10&ndash;12 mins</span>
+            </div>
+          </div>
+          <div style="font-size:0.7rem;color:var(--border);text-align:right;margin-top:0.25rem;">
+            Trains updated ${new Date().toLocaleTimeString('en-GB')} &bull; National Rail
+          </div>`;
+      } catch(err) {
+        wrap.innerHTML = `<span class="error">&#9888; Transport data unavailable (${err.message})</span>`;
+      }
+    }
+
+    fetchTrains();
+    setInterval(fetchTrains, 60 * 1000);
 
     // ═══════════════════════════════════════════════════
     //  SCHOOL CALENDAR  — fetches /cal (nginx proxy)
