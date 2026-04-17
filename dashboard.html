@@ -355,6 +355,31 @@
       text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
     }
 
+    /* ══ 7-DAY FORECAST ═════════════════════════════ */
+    .forecast-strip {
+      display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.2rem;
+    }
+    .forecast-day {
+      flex: 1; min-width: 62px; display: flex; flex-direction: column;
+      align-items: center; padding: 0.65rem 0.3rem; background: var(--surface2);
+      border-radius: 9px; border: 1px solid var(--border); gap: 0.2rem;
+    }
+    .forecast-day.today { border-color: var(--accent); background: rgba(77,166,255,0.09); }
+    .fc-name  { font-size: 0.62rem; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .fc-icon  { font-size: 1.45rem; line-height: 1.3; }
+    .fc-hi    { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .fc-lo    { font-size: 0.72rem; color: var(--muted); }
+
+    /* ══ BIN DAY ═════════════════════════════════════ */
+    .bin-row {
+      display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.85rem;
+      background: var(--surface2); border-radius: 8px; margin-bottom: 0.4rem;
+      border-left: 3px solid var(--border);
+    }
+    .bin-icon { font-size: 1.5rem; line-height: 1; }
+    .bin-name { font-size: 0.875rem; font-weight: 500; }
+    .bin-when { font-size: 0.74rem; color: var(--muted); margin-top: 0.1rem; }
+
     /* ══ STATUS / LOADING ════════════════════════════ */
     .loading { color: var(--muted); font-size: 0.875rem; animation: pulse 1.5s ease-in-out infinite; }
     .error   { color: var(--red);   font-size: 0.875rem; }
@@ -400,32 +425,50 @@
     <div id="affirmation-bar"><span class="loading">Loading your affirmation…</span></div>
   </header>
 
+  <!-- ── 7-DAY FORECAST ────────────────────────────── -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>7-Day Forecast &mdash; Birmingham</div>
+    <div id="forecast-wrap" class="forecast-strip"><span class="loading">Loading…</span></div>
+  </div>
+
+  <!-- ── WEATHER | SUN+AQI | BIN DAY ───────────────── -->
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Birmingham Weather</div>
+      <div id="weather-wrap"><span class="loading">Fetching weather…</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot orange"></span>Sun &amp; Air Quality</div>
+      <div id="sun-arc-div"><span class="loading">Loading…</span></div>
+      <div id="aqi-div"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot yellow"></span>Bin Day</div>
+      <div id="bin-wrap"><span class="loading">Loading…</span></div>
+    </div>
+
+  </div>
+
   <!-- ── CALENDAR ─────────────────────────────────── -->
   <div class="card">
     <div class="card-title"><span class="dot orange"></span>School Calendar &mdash; Today &amp; Tomorrow</div>
     <div id="cal-wrap"><span class="loading">Loading calendar…</span></div>
   </div>
 
-  <!-- ── ROW 1: Weather + News ─────────────────────── -->
+  <!-- ── NEWS ──────────────────────────────────────── -->
   <div class="grid">
 
-    <!-- Weather & Clothing -->
     <div class="card">
-      <div class="card-title"><span class="dot"></span>Birmingham Weather</div>
-      <div id="weather-wrap"><span class="loading">Fetching weather…</span></div>
+      <div class="card-title"><span class="dot yellow"></span>West Midlands News</div>
+      <div id="news-brum-wrap"><span class="loading">Loading…</span></div>
     </div>
 
-    <!-- News -->
     <div class="card">
-      <div class="card-title"><span class="dot yellow"></span>Birmingham News &amp; BCFC</div>
-      <div class="news-section">
-        <div class="news-section-label">&#128505; West Midlands</div>
-        <div id="news-brum-wrap"><span class="loading">Loading…</span></div>
-      </div>
-      <div class="news-section">
-        <div class="news-section-label" style="color:#005daa">&#9917; Birmingham City</div>
-        <div id="news-bcfc-wrap"><span class="loading">Loading…</span></div>
-      </div>
+      <div class="card-title"><span class="dot" style="background:#005daa"></span>Birmingham City FC</div>
+      <div id="news-bcfc-wrap"><span class="loading">Loading…</span></div>
     </div>
 
   </div>
@@ -889,6 +932,153 @@
     }
     fetchCalendar();
     setInterval(fetchCalendar, 15*60*1000);
+
+    // ═══════════════════════════════════════════════════
+    //  7-DAY FORECAST + SUN ARC  (Open-Meteo daily)
+    // ═══════════════════════════════════════════════════
+    let _riseMin = 360, _setMin = 1200;
+
+    function timeStrToMin(t) {
+      const parts = t.split('T')[1].split(':');
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+
+    function renderSunArc() {
+      const el = document.getElementById('sun-arc-div');
+      if (!el) return;
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const progress = Math.max(0, Math.min(1, (nowMin - _riseMin) / (_setMin - _riseMin)));
+      const isDay = nowMin >= _riseMin && nowMin <= _setMin;
+      const fmtMin = (m) => {
+        const h = Math.floor(m / 60), mn = pad(m % 60);
+        return (h % 12 || 12) + ':' + mn + (h < 12 ? 'am' : 'pm');
+      };
+      const angle = progress * Math.PI;
+      const cx = 100, cy = 95, r = 78;
+      const sx = (cx - r * Math.cos(angle)).toFixed(1);
+      const sy = (cy - r * Math.sin(angle)).toFixed(1);
+      const minLeft = _setMin - nowMin;
+      const hoursLeft = isDay ? (Math.floor(minLeft/60) + 'h ' + (minLeft%60) + 'm') : '';
+      el.innerHTML = `
+        <svg viewBox="0 0 200 108" style="width:100%;max-height:108px;display:block">
+          <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}"
+                fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="4"/>
+          <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${sx} ${sy}"
+                fill="none" stroke="${isDay?'#fb923c':'rgba(255,255,255,0.15)'}" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="${sx}" cy="${sy}" r="${isDay?9:5}"
+                  fill="${isDay?'#fbbf24':'#475569'}"
+                  style="filter:${isDay?'drop-shadow(0 0 8px rgba(251,191,36,0.9))':'none'}"/>
+          <line x1="${cx-r-4}" y1="${cy}" x2="${cx+r+4}" y2="${cy}"
+                stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3,4"/>
+          <text x="${cx-r}" y="${cy+16}" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9" font-family="sans-serif">&#9650; ${fmtMin(_riseMin)}</text>
+          <text x="${cx+r}" y="${cy+16}" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9" font-family="sans-serif">&#9660; ${fmtMin(_setMin)}</text>
+        </svg>
+        <div style="text-align:center;font-size:0.78rem;color:var(--muted);margin-top:0.2rem">
+          ${isDay ? '<span style="color:var(--orange)">' + hoursLeft + ' daylight left</span>'
+                  : nowMin < _riseMin ? 'Sunrise in ' + fmtMin(_riseMin - nowMin).replace('am','').replace('pm','')
+                  : 'After sunset'}
+        </div>`;
+    }
+
+    async function fetchForecast() {
+      const wrap = document.getElementById('forecast-wrap');
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.4862&longitude=-1.8904&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=Europe%2FLondon&forecast_days=7');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const d = data.daily;
+        _riseMin = timeStrToMin(d.sunrise[0]);
+        _setMin  = timeStrToMin(d.sunset[0]);
+        renderSunArc();
+        const todayStr = new Date().toDateString();
+        const sday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        wrap.innerHTML = d.time.map((dateStr, i) => {
+          const dt = new Date(dateStr + 'T12:00:00');
+          const isToday = dt.toDateString() === todayStr;
+          const wmo = wmoInterpret(d.weathercode[i]);
+          return `<div class="forecast-day${isToday?' today':''}">
+            <div class="fc-name">${isToday?'Today':sday[dt.getDay()]}</div>
+            <div class="fc-icon">${wmo.icon}</div>
+            <div class="fc-hi">${Math.round(d.temperature_2m_max[i])}&deg;</div>
+            <div class="fc-lo">${Math.round(d.temperature_2m_min[i])}&deg;</div>
+          </div>`;
+        }).join('');
+      } catch(err) {
+        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
+      }
+    }
+    fetchForecast();
+    setInterval(fetchForecast, 10 * 60 * 1000);
+    setInterval(renderSunArc,  60 * 1000);
+
+    // ═══════════════════════════════════════════════════
+    //  AIR QUALITY + UV  (Open-Meteo air quality API)
+    // ═══════════════════════════════════════════════════
+    async function fetchAQI() {
+      const el = document.getElementById('aqi-div');
+      try {
+        const res = await fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=52.4862&longitude=-1.8904&current=european_aqi,uv_index');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const aqi = Math.round(data.current.european_aqi);
+        const uv  = data.current.uv_index?.toFixed(1) ?? '—';
+        const aqiC = aqi < 20 ? 'var(--green)' : aqi < 40 ? 'var(--yellow)' : aqi < 60 ? 'var(--orange)' : 'var(--red)';
+        const aqiL = aqi < 20 ? 'Good' : aqi < 40 ? 'Fair' : aqi < 60 ? 'Moderate' : 'Poor';
+        const uvN  = +uv;
+        const uvL  = uvN < 3 ? 'Low' : uvN < 6 ? 'Moderate' : uvN < 8 ? 'High' : 'Very High';
+        const uvT  = uvN < 3 ? '' : uvN < 6 ? 'SPF 15+' : 'SPF 30+ &amp; cover up';
+        el.innerHTML = `<div style="display:flex;gap:1.25rem;margin-top:0.85rem;flex-wrap:wrap">
+          <div>
+            <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Air Quality</div>
+            <div style="font-size:1.25rem;font-weight:700;color:${aqiC}">${aqiL}</div>
+            <div style="font-size:0.72rem;color:var(--muted)">EU AQI ${aqi}</div>
+          </div>
+          <div>
+            <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">UV Index</div>
+            <div style="font-size:1.25rem;font-weight:700;color:var(--yellow)">${uv} &mdash; ${uvL}</div>
+            ${uvT ? `<div style="font-size:0.72rem;color:var(--muted)">${uvT}</div>` : ''}
+          </div>
+        </div>`;
+      } catch { el.innerHTML = ''; }
+    }
+    fetchAQI();
+    setInterval(fetchAQI, 30 * 60 * 1000);
+
+    // ═══════════════════════════════════════════════════
+    //  BIN DAY  — update refDate to match your collection
+    // ═══════════════════════════════════════════════════
+    const BINS = [
+      { name:'General Waste', emoji:'🗑️',  colour:'#4b5563', freq:14, ref:'2026-04-21' },
+      { name:'Recycling',     emoji:'♻️',  colour:'#1d4ed8', freq:14, ref:'2026-04-28' },
+      { name:'Garden Waste',  emoji:'🌿',  colour:'#15803d', freq:14, ref:'2026-04-22' },
+    ];
+
+    function renderBins() {
+      const wrap = document.getElementById('bin-wrap');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const bins = BINS.map(b => {
+        const ref = new Date(b.ref);
+        const diff = Math.round((today - ref) / 86400000);
+        const rem = ((diff % b.freq) + b.freq) % b.freq;
+        return { ...b, days: rem === 0 ? 0 : b.freq - rem };
+      }).filter(b => b.days <= 7).sort((a,b) => a.days - b.days);
+
+      if (!bins.length) {
+        wrap.innerHTML = '<div style="color:var(--muted);font-size:0.875rem">No collections in the next 7 days</div>';
+        return;
+      }
+      wrap.innerHTML = bins.map(b => {
+        const when = b.days === 0 ? '&#128308; Out today!'
+                   : b.days === 1 ? '&#128993; Out tomorrow'
+                   : `In ${b.days} days`;
+        return `<div class="bin-row" style="border-left-color:${b.colour}">
+          <div class="bin-icon">${b.emoji}</div>
+          <div><div class="bin-name">${b.name}</div><div class="bin-when">${when}</div></div>
+        </div>`;
+      }).join('');
+    }
+    renderBins();
 
     // ═══════════════════════════════════════════════════
     //  FOOTER
