@@ -1,0 +1,31 @@
+NGINX CALENDAR PROXY SETUP
+==========================
+
+The dashboard fetches your Google Calendar via /cal on localhost.
+This keeps your private calendar URL off GitHub and avoids CORS issues.
+
+1. FIND YOUR NGINX SERVER BLOCK
+   Usually in: /etc/nginx/sites-available/dashboard
+
+2. ADD THIS INSIDE THE server { } BLOCK
+   Replace YOUR_ICAL_URL with your actual Google Calendar .ics URL:
+
+   location /cal {
+       proxy_pass https://calendar.google.com/calendar/ical/YOUR_GOOGLE_ACCOUNT/private-TOKEN/basic.ics;
+       proxy_ssl_server_name on;
+       proxy_set_header Host calendar.google.com;
+       add_header Cache-Control "public, max-age=900";
+   }
+
+   The cache header means nginx caches it for 15 minutes — saves hitting Google every load.
+
+3. TEST AND RELOAD
+   sudo nginx -t
+   sudo systemctl reload nginx
+
+4. VERIFY
+   curl http://localhost:8080/cal | head -5
+   Should start with: BEGIN:VCALENDAR
+
+NOTE: Your private iCal URL is a secret — never commit it to git.
+      It lives only in your nginx config on your server.
