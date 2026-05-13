@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Arrangement Builder</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131c;
+    --surface2: #1c1c2a;
+    --border: #2a2a3d;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --accent: #7c6fef;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+    --intro:     #3b4a6b;
+    --build:     #5c3d6e;
+    --drop:      #7a2040;
+    --breakdown: #1e4d5c;
+    --bridge:    #2d5a3d;
+    --outro:     #2a2a4a;
+    --hook:      #4a3b1e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-top: var(--safe-top);
+    padding-bottom: calc(var(--safe-bottom) + 70px);
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 10px;
+    position: sticky;
+    top: var(--safe-top);
+    z-index: 100;
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--accent); }
+  .track-meta { display: flex; gap: 10px; margin-top: 8px; }
+  .meta-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    min-width: 60px;
+    text-align: center;
+  }
+  .meta-pill:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .meta-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; display: block; }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stats-bar::-webkit-scrollbar { display: none; }
+  .stat {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-val { font-size: 16px; font-weight: 700; color: var(--accent); }
+  .stat-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+  /* ── Timeline ── */
+  .timeline-wrap {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    padding: 16px 16px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .timeline-wrap::-webkit-scrollbar { height: 4px; }
+  .timeline-wrap::-webkit-scrollbar-track { background: transparent; }
+  .timeline-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .timeline {
+    position: relative;
+    min-width: max-content;
+    padding-bottom: 8px;
+  }
+
+  /* Bar ruler */
+  .bar-ruler {
+    display: flex;
+    margin-bottom: 6px;
+    padding-left: 0;
+  }
+  .bar-tick {
+    width: var(--bar-w, 8px);
+    font-size: 8px;
+    color: var(--muted);
+    text-align: center;
+    user-select: none;
+  }
+
+  /* Energy lane */
+  .energy-lane {
+    display: flex;
+    height: 32px;
+    gap: 2px;
+    margin-bottom: 6px;
+    align-items: flex-end;
+  }
+  .energy-bar {
+    border-radius: 2px 2px 0 0;
+    transition: height .2s;
+  }
+
+  /* Section blocks */
+  .sections-row {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 12px;
+  }
+  .section-block {
+    position: relative;
+    border-radius: 8px;
+    padding: 8px 6px 6px;
+    cursor: pointer;
+    transition: filter .15s, transform .1s;
+    border: 2px solid transparent;
+    overflow: hidden;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .section-block:active { transform: scale(.97); filter: brightness(1.15); }
+  .section-block.selected { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
+  .section-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,.3);
+    border-radius: 8px 8px 0 0;
+  }
+  .section-type-label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .section-bars-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+  .section-detail {
+    font-size: 8px;
+    color: rgba(255,255,255,.5);
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .section-flag {
+    display: inline-block;
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.15);
+    color: rgba(255,255,255,.8);
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  /* ── Add section row ── */
+  .add-row {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 12px;
+  }
+  .add-row::-webkit-scrollbar { display: none; }
+  .type-btn {
+    flex: 0 0 auto;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    touch-action: manipulation;
+  }
+  .type-btn:active { transform: scale(.95); }
+
+  /* ── Section notes panel ── */
+  .notes-panel {
+    margin: 0 16px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+  }
+  .notes-panel.open { display: block; }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .panel-title { font-size: 14px; font-weight: 700; }
+  .panel-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .icon-btn:active { background: var(--surface2); }
+  .icon-btn.danger { color: #e05555; }
+
+  .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+  .field-row { display: flex; gap: 8px; align-items: flex-start; }
+  .field { flex: 1; }
+  .field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 4px; }
+
+  .seg-control {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .seg-btn {
+    flex: 1;
+    padding: 6px 4px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    touch-action: manipulation;
+  }
+  .seg-btn.active { background: var(--accent); color: #fff; }
+
+  .energy-control {
+    display: flex;
+    gap: 4px;
+  }
+  .energy-dot {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    touch-action: manipulation;
+    color: var(--muted);
+  }
+  .energy-dot.active { border-color: transparent; color: #fff; }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 10px 12px;
+    resize: none;
+    line-height: 1.4;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  textarea::placeholder { color: var(--muted); }
+
+  .tags-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag-chip {
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .15s;
+    touch-action: manipulation;
+  }
+  .tag-chip.active { border-color: var(--accent); background: rgba(124,111,239,.2); color: var(--accent); }
+  .tag-chip:active { transform: scale(.95); }
+
+  /* ── Bottom bar ── */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    padding: 10px 16px calc(var(--safe-bottom) + 10px);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+  /* ── Export sheet ── */
+  .sheet-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+  .sheet-overlay.open { display: flex; }
+  .sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(var(--safe-bottom) + 20px);
+    width: 100%;
+    max-height: 70dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .sheet h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .export-text {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'SF Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 12px;
+    max-height: 35dvh;
+    overflow-y: auto;
+  }
+  .copy-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .copy-btn:active { opacity: .85; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    top: calc(var(--safe-top) + 60px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: rgba(124,111,239,.95);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all .25s;
+    pointer-events: none;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Scrollbar polish ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-row">
+    <span class="logo">Arrangement Builder</span>
+    <button class="icon-btn" id="exportBtn" title="Export">&#8679;</button>
+  </div>
+  <div class="track-meta">
+    <div>
+      <span class="meta-label">BPM</span>
+      <input class="meta-pill" id="bpm" type="number" value="128" min="60" max="200">
+    </div>
+    <div>
+      <span class="meta-label">Key</span>
+      <input class="meta-pill" id="trackKey" type="text" value="Am" maxlength="4">
+    </div>
+    <div>
+      <span class="meta-label">Time</span>
+      <select class="meta-pill" id="timeSig">
+        <option>4/4</option><option>3/4</option><option>6/8</option>
+      </select>
+    </div>
+    <div>
+      <span class="meta-label">Name</span>
+      <input class="meta-pill" id="trackName" type="text" placeholder="Untitled" style="min-width:100px">
+    </div>
+  </div>
+</header>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val" id="statBars">0</div><div class="stat-lbl">Total Bars</div></div>
+  <div class="stat"><div class="stat-val" id="statMins">0:00</div><div class="stat-lbl">Duration</div></div>
+  <div class="stat"><div class="stat-val" id="statSections">0</div><div class="stat-lbl">Sections</div></div>
+  <div class="stat"><div class="stat-val" id="statPeak">—</div><div class="stat-lbl">Peak Energy</div></div>
+</div>
+
+<!-- Timeline -->
+<div class="timeline-wrap">
+  <div class="timeline">
+    <div class="bar-ruler" id="barRuler"></div>
+    <div class="energy-lane" id="energyLane"></div>
+    <div class="sections-row" id="sectionsRow"></div>
+  </div>
+</div>
+
+<!-- Add section -->
+<div class="add-row" id="addRow"></div>
+
+<!-- Notes panel -->
+<div class="notes-panel" id="notesPanel">
+  <div class="panel-header">
+    <span class="panel-title" id="panelTitle">Section</span>
+    <div class="panel-actions">
+      <button class="icon-btn" id="moveLeftBtn" title="Move left">&#8592;</button>
+      <button class="icon-btn" id="moveRightBtn" title="Move right">&#8594;</button>
+      <button class="icon-btn danger" id="deleteSectionBtn" title="Delete">&#128465;</button>
+      <button class="icon-btn" id="closePanelBtn" title="Close">&#10005;</button>
+    </div>
+  </div>
+  <div class="panel-body">
+
+    <div class="field-row">
+      <div class="field">
+        <label>Bars</label>
+        <div class="seg-control" id="barsSeg"></div>
+      </div>
+      <div class="field">
+        <label>Energy (1-10)</label>
+        <div class="energy-control" id="energyCtrl"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Elements present</label>
+      <div class="tags-row" id="elemTagsRow"></div>
+    </div>
+
+    <div class="field">
+      <label>Fading in / out</label>
+      <textarea id="fadeNotes" rows="2" placeholder="e.g. hi-hats fade in over 4 bars, pad swells out…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Transition notes</label>
+      <textarea id="transitionNotes" rows="2" placeholder="e.g. filter sweep into drop, needs riser…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Section notes</label>
+      <textarea id="sectionNotes" rows="3" placeholder="Free notes for this section…"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <button class="btn btn-secondary" id="clearBtn">Clear All</button>
+  <button class="btn btn-primary" id="exportBtnBottom">Export Scaffold &#8679;</button>
+</div>
+
+<!-- Export sheet -->
+<div class="sheet-overlay" id="sheetOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Arrangement Scaffold</h3>
+    <div class="export-text" id="exportText"></div>
+    <button class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const SECTION_TYPES = [
+  { id: 'intro',     label: 'Intro',     color: '#3b4a6b', energy: 2 },
+  { id: 'build',     label: 'Build',     color: '#5c3d6e', energy: 6 },
+  { id: 'drop',      label: 'Drop',      color: '#7a2040', energy: 9 },
+  { id: 'breakdown', label: 'Breakdown', color: '#1e4d5c', energy: 4 },
+  { id: 'bridge',    label: 'Bridge',    color: '#2d5a3d', energy: 5 },
+  { id: 'hook',      label: 'Hook',      color: '#4a3b1e', energy: 7 },
+  { id: 'outro',     label: 'Outro',     color: '#2a2a4a', energy: 3 },
+];
+
+const ELEMENTS = [
+  'Kick','Snare','Hi-hat','Perc','Bass','Sub','Lead','Pad',
+  'Vox','FX','Riser','Noise','Breakdown Stab','Stabs','Chord'
+];
+
+const BAR_OPTS = [4, 8, 16, 32, 64];
+const PX_PER_BAR = 9;
+
+// ── State ──────────────────────────────────────────────────────────────────
+let sections = [];
+let selectedIdx = null;
+let uid = 0;
+
+function makeSection(type) {
+  const def = SECTION_TYPES.find(t => t.id === type) || SECTION_TYPES[0];
+  return {
+    id: ++uid,
+    type: def.id,
+    label: def.label,
+    color: def.color,
+    bars: 16,
+    energy: def.energy,
+    elements: [],
+    fadeNotes: '',
+    transitionNotes: '',
+    sectionNotes: '',
+  };
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  renderTimeline();
+  renderStats();
+  renderPanel();
+}
+
+function renderTimeline() {
+  const row = document.getElementById('sectionsRow');
+  const ruler = document.getElementById('barRuler');
+  const energy = document.getElementById('energyLane');
+  row.innerHTML = '';
+  ruler.innerHTML = '';
+  energy.innerHTML = '';
+
+  let barCursor = 1;
+  sections.forEach((sec, i) => {
+    // Block
+    const w = sec.bars * PX_PER_BAR;
+    const el = document.createElement('div');
+    el.className = 'section-block' + (i === selectedIdx ? ' selected' : '');
+    el.style.cssText = `background:${sec.color};width:${w}px;flex:0 0 ${w}px;`;
+
+    let elemPreview = sec.elements.slice(0,3).join(', ');
+    if (sec.elements.length > 3) elemPreview += ` +${sec.elements.length-3}`;
+
+    el.innerHTML = `
+      <div class="section-type-label">${sec.label}</div>
+      <div class="section-bars-label">${sec.bars}</div>
+      ${elemPreview ? `<div class="section-detail">${elemPreview}</div>` : ''}
+      ${sec.transitionNotes ? '<span class="section-flag">⚡ Transition</span>' : ''}
+    `;
+    el.addEventListener('click', () => selectSection(i));
+    el.addEventListener('touchend', e => { e.preventDefault(); selectSection(i); });
+    row.appendChild(el);
+
+    // Ruler ticks
+    for (let b = 0; b < sec.bars; b++) {
+      const tick = document.createElement('div');
+      tick.className = 'bar-tick';
+      tick.style.width = PX_PER_BAR + 'px';
+      const barNum = barCursor + b;
+      tick.textContent = (barNum === 1 || barNum % 8 === 0) ? barNum : '';
+      ruler.appendChild(tick);
+    }
+
+    // Energy bars
+    for (let b = 0; b < sec.bars; b++) {
+      const bar = document.createElement('div');
+      bar.className = 'energy-bar';
+      const h = Math.round((sec.energy / 10) * 30);
+      bar.style.cssText = `width:${PX_PER_BAR - 1}px;height:${h}px;background:${energyColor(sec.energy)};`;
+      energy.appendChild(bar);
+    }
+
+    barCursor += sec.bars;
+  });
+}
+
+function energyColor(e) {
+  if (e <= 3) return '#3b6b8a';
+  if (e <= 5) return '#5c6e3d';
+  if (e <= 7) return '#6e5c3d';
+  if (e <= 8) return '#7a4a2a';
+  return '#8a1a2a';
+}
+
+function renderStats() {
+  const totalBars = sections.reduce((s, x) => s + x.bars, 0);
+  const bpm = parseFloat(document.getElementById('bpm').value) || 128;
+  const beatsPerBar = 4;
+  const totalBeats = totalBars * beatsPerBar;
+  const totalSec = (totalBeats / bpm) * 60;
+  const mins = Math.floor(totalSec / 60);
+  const secs = Math.floor(totalSec % 60);
+
+  const maxEnergy = sections.length ? Math.max(...sections.map(s => s.energy)) : 0;
+
+  document.getElementById('statBars').textContent = totalBars;
+  document.getElementById('statMins').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
+  document.getElementById('statSections').textContent = sections.length;
+  document.getElementById('statPeak').textContent = maxEnergy ? maxEnergy + '/10' : '—';
+}
+
+function renderPanel() {
+  const panel = document.getElementById('notesPanel');
+  if (selectedIdx === null || selectedIdx >= sections.length) {
+    panel.classList.remove('open');
+    return;
+  }
+  panel.classList.add('open');
+  const sec = sections[selectedIdx];
+
+  document.getElementById('panelTitle').textContent = `${sec.label} — ${sec.bars} bars`;
+
+  // Bars seg
+  const barsSeg = document.getElementById('barsSeg');
+  barsSeg.innerHTML = '';
+  BAR_OPTS.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'seg-btn' + (sec.bars === b ? ' active' : '');
+    btn.textContent = b;
+    btn.addEventListener('click', () => { sec.bars = b; render(); });
+    barsSeg.appendChild(btn);
+  });
+
+  // Energy
+  const energyCtrl = document.getElementById('energyCtrl');
+  energyCtrl.innerHTML = '';
+  [1,2,3,4,5,6,7,8,9,10].forEach(n => {
+    const dot = document.createElement('div');
+    dot.className = 'energy-dot' + (sec.energy >= n ? ' active' : '');
+    dot.style.background = sec.energy >= n ? energyColor(n) : '';
+    dot.textContent = n;
+    dot.addEventListener('click', () => { sec.energy = n; render(); });
+    energyCtrl.appendChild(dot);
+  });
+
+  // Element tags
+  const tagsRow = document.getElementById('elemTagsRow');
+  tagsRow.innerHTML = '';
+  ELEMENTS.forEach(el => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip' + (sec.elements.includes(el) ? ' active' : '');
+    chip.textContent = el;
+    chip.addEventListener('click', () => {
+      const idx2 = sec.elements.indexOf(el);
+      if (idx2 === -1) sec.elements.push(el);
+      else sec.elements.splice(idx2, 1);
+      render();
+    });
+    tagsRow.appendChild(chip);
+  });
+
+  document.getElementById('fadeNotes').value = sec.fadeNotes;
+  document.getElementById('transitionNotes').value = sec.transitionNotes;
+  document.getElementById('sectionNotes').value = sec.sectionNotes;
+}
+
+// ── Selection ──────────────────────────────────────────────────────────────
+function selectSection(i) {
+  if (selectedIdx === i) {
+    selectedIdx = null;
+  } else {
+    selectedIdx = i;
+  }
+  render();
+  if (selectedIdx !== null) {
+    requestAnimationFrame(() => {
+      document.getElementById('notesPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+}
+
+// ── Panel inputs (live) ────────────────────────────────────────────────────
+document.getElementById('fadeNotes').addEventListener('input', e => {
+  if (selectedIdx !== null) sections[selectedIdx].fadeNotes = e.target.value;
+});
+document.getElementById('transitionNotes').addEventListener('input', e => {
+  if (selectedIdx !== null) { sections[selectedIdx].transitionNotes = e.target.value; renderTimeline(); }
+});
+document.getElementById('sectionNotes').addEventListener('input', e => {
+  if (selectedIdx !== null) sections[selectedIdx].sectionNotes = e.target.value;
+});
+
+// ── Panel buttons ──────────────────────────────────────────────────────────
+document.getElementById('closePanelBtn').addEventListener('click', () => {
+  selectedIdx = null; render();
+});
+
+document.getElementById('deleteSectionBtn').addEventListener('click', () => {
+  if (selectedIdx === null) return;
+  sections.splice(selectedIdx, 1);
+  selectedIdx = null;
+  render();
+  toast('Section deleted');
+});
+
+document.getElementById('moveLeftBtn').addEventListener('click', () => {
+  if (selectedIdx === null || selectedIdx === 0) return;
+  [sections[selectedIdx-1], sections[selectedIdx]] = [sections[selectedIdx], sections[selectedIdx-1]];
+  selectedIdx--;
+  render();
+});
+
+document.getElementById('moveRightBtn').addEventListener('click', () => {
+  if (selectedIdx === null || selectedIdx >= sections.length - 1) return;
+  [sections[selectedIdx+1], sections[selectedIdx]] = [sections[selectedIdx], sections[selectedIdx+1]];
+  selectedIdx++;
+  render();
+});
+
+// ── Add section buttons ────────────────────────────────────────────────────
+function buildAddRow() {
+  const row = document.getElementById('addRow');
+  row.innerHTML = '';
+  SECTION_TYPES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'type-btn';
+    btn.style.borderColor = t.color + '99';
+    btn.textContent = '+ ' + t.label;
+    btn.addEventListener('click', () => {
+      const s = makeSection(t.id);
+      if (selectedIdx !== null) {
+        sections.splice(selectedIdx + 1, 0, s);
+        selectedIdx = selectedIdx + 1;
+      } else {
+        sections.push(s);
+        selectedIdx = sections.length - 1;
+      }
+      render();
+      toast(t.label + ' added');
+    });
+    row.appendChild(btn);
+  });
+}
+
+// ── BPM change ─────────────────────────────────────────────────────────────
+document.getElementById('bpm').addEventListener('input', () => renderStats());
+
+// ── Clear ──────────────────────────────────────────────────────────────────
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (sections.length === 0) return;
+  if (confirm('Clear all sections?')) {
+    sections = [];
+    selectedIdx = null;
+    render();
+  }
+});
+
+// ── Export ─────────────────────────────────────────────────────────────────
+function buildExportText() {
+  const bpm = document.getElementById('bpm').value || '?';
+  const key = document.getElementById('trackKey').value || '?';
+  const sig = document.getElementById('timeSig').value || '4/4';
+  const name = document.getElementById('trackName').value || 'Untitled';
+  const totalBars = sections.reduce((s, x) => s + x.bars, 0);
+
+  let out = `ARRANGEMENT SCAFFOLD\n`;
+  out += `${'─'.repeat(40)}\n`;
+  out += `Track : ${name}\n`;
+  out += `BPM   : ${bpm}  |  Key: ${key}  |  Time: ${sig}\n`;
+  out += `Total : ${totalBars} bars\n`;
+  out += `${'─'.repeat(40)}\n\n`;
+
+  let barCursor = 1;
+  sections.forEach((sec, i) => {
+    out += `[${String(i+1).padStart(2,'0')}] ${sec.label.toUpperCase().padEnd(12)} ${sec.bars} bars  |  Energy: ${sec.energy}/10  |  Bars ${barCursor}–${barCursor+sec.bars-1}\n`;
+    if (sec.elements.length) out += `     Present   : ${sec.elements.join(', ')}\n`;
+    if (sec.fadeNotes)       out += `     Fade       : ${sec.fadeNotes}\n`;
+    if (sec.transitionNotes) out += `     Transition : ${sec.transitionNotes}\n`;
+    if (sec.sectionNotes)    out += `     Notes      : ${sec.sectionNotes}\n`;
+    out += '\n';
+    barCursor += sec.bars;
+  });
+
+  return out.trim();
+}
+
+function openExport() {
+  if (sections.length === 0) { toast('Add some sections first'); return; }
+  document.getElementById('exportText').textContent = buildExportText();
+  document.getElementById('sheetOverlay').classList.add('open');
+}
+
+document.getElementById('exportBtn').addEventListener('click', openExport);
+document.getElementById('exportBtnBottom').addEventListener('click', openExport);
+document.getElementById('sheetOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('sheetOverlay')) {
+    document.getElementById('sheetOverlay').classList.remove('open');
+  }
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = document.getElementById('exportText').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied!')).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+});
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:-999px';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); toast('Copied!'); }
+  catch { toast('Copy failed — select text manually'); }
+  document.body.removeChild(ta);
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// ── Persistence ────────────────────────────────────────────────────────────
+function save() {
+  try {
+    localStorage.setItem('arr_sections', JSON.stringify(sections));
+    localStorage.setItem('arr_uid', uid);
+    localStorage.setItem('arr_meta', JSON.stringify({
+      bpm: document.getElementById('bpm').value,
+      key: document.getElementById('trackKey').value,
+      sig: document.getElementById('timeSig').value,
+      name: document.getElementById('trackName').value,
+    }));
+  } catch {}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem('arr_sections');
+    if (raw) sections = JSON.parse(raw);
+    uid = parseInt(localStorage.getItem('arr_uid') || '0');
+    const meta = JSON.parse(localStorage.getItem('arr_meta') || '{}');
+    if (meta.bpm) document.getElementById('bpm').value = meta.bpm;
+    if (meta.key) document.getElementById('trackKey').value = meta.key;
+    if (meta.sig) document.getElementById('timeSig').value = meta.sig;
+    if (meta.name) document.getElementById('trackName').value = meta.name;
+  } catch {}
+}
+
+// Auto-save on any change
+document.addEventListener('input', save);
+document.addEventListener('click', () => setTimeout(save, 200));
+
+// ── Bootstrap ──────────────────────────────────────────────────────────────
+load();
+buildAddRow();
+
+if (sections.length === 0) {
+  // Seed a typical EDM arrangement
+  const seed = ['intro','build','drop','breakdown','build','drop','outro'];
+  const seedBars = [16,16,32,16,8,32,16];
+  seed.forEach((t, i) => {
+    const s = makeSection(t);
+    s.bars = seedBars[i];
+    sections.push(s);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
