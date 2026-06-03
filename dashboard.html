@@ -395,7 +395,31 @@
 
   </div>
 
-  <!-- ── ROW 2: Transport + Family Links ───────────── -->
+  <!-- ── ROW 2: UK News + Music News ──────────────── -->
+  <div class="grid">
+
+    <!-- UK & World News -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>UK &amp; World News</div>
+      <div id="news-uk-wrap"><span class="loading">Loading…</span></div>
+    </div>
+
+    <!-- Music News -->
+    <div class="card">
+      <div class="card-title"><span class="dot purple"></span>Music News</div>
+      <div class="news-section">
+        <div class="news-section-label">&#127925; NME</div>
+        <div id="news-nme-wrap"><span class="loading">Loading…</span></div>
+      </div>
+      <div class="news-section">
+        <div class="news-section-label">&#127916; BBC Music</div>
+        <div id="news-bbcmusic-wrap"><span class="loading">Loading…</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── ROW 3: Transport + Family Links ───────────── -->
   <div class="grid">
 
     <!-- Transport -->
@@ -443,7 +467,7 @@
 
   <footer>
     Home Dashboard &mdash; <span id="footer-host">localhost:8080</span>
-    &mdash; <span>Updates: weather 10 min &bull; news 30 min</span>
+    &mdash; <span>Updates: weather 10 min &bull; news 30 min &bull; trains 1 min</span>
   </footer>
 
   <script>
@@ -677,6 +701,68 @@
     fetchBCFC();
     setInterval(fetchBrumNews, 30 * 60 * 1000);
     setInterval(fetchBCFC,     30 * 60 * 1000);
+
+    // ═══════════════════════════════════════════════════
+    //  UK & WORLD NEWS — BBC Top Stories
+    // ═══════════════════════════════════════════════════
+    async function fetchUKNews() {
+      const wrap = document.getElementById('news-uk-wrap');
+      try {
+        const items = await parseRSS('https://feeds.bbci.co.uk/news/uk/rss.xml', 6);
+        wrap.innerHTML = renderNewsItems(items);
+      } catch(err) {
+        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
+      }
+    }
+    fetchUKNews();
+    setInterval(fetchUKNews, 30 * 60 * 1000);
+
+    // ═══════════════════════════════════════════════════
+    //  MUSIC NEWS — NME + BBC Music via CORS proxy
+    // ═══════════════════════════════════════════════════
+    const CORS = 'https://api.allorigins.win/raw?url=';
+
+    async function parseRSSviaCORS(url, count) {
+      const res = await fetch(CORS + encodeURIComponent(url));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const txt = await res.text();
+      const xml = new DOMParser().parseFromString(txt, 'text/xml');
+      return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
+        title: el.querySelector('title')?.textContent?.trim() || '',
+        link:  el.querySelector('link')?.nextSibling?.nodeValue?.trim() ||
+               el.querySelector('guid')?.textContent?.trim() || '#'
+      }));
+    }
+
+    async function fetchNME() {
+      const wrap = document.getElementById('news-nme-wrap');
+      try {
+        const items = await parseRSSviaCORS('https://www.nme.com/feed', 4);
+        wrap.innerHTML = renderNewsItems(items);
+      } catch(err) {
+        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
+      }
+    }
+
+    async function fetchBBCMusic() {
+      const wrap = document.getElementById('news-bbcmusic-wrap');
+      try {
+        const items = await parseRSS('https://feeds.bbci.co.uk/music/rss.xml', 4);
+        wrap.innerHTML = renderNewsItems(items);
+      } catch {
+        try {
+          const items2 = await parseRSSviaCORS('https://pitchfork.com/rss/news/feed.xml', 4);
+          wrap.innerHTML = renderNewsItems(items2);
+        } catch(err) {
+          wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
+        }
+      }
+    }
+
+    fetchNME();
+    fetchBBCMusic();
+    setInterval(fetchNME,      30 * 60 * 1000);
+    setInterval(fetchBBCMusic, 30 * 60 * 1000);
 
     // ═══════════════════════════════════════════════════
     //  TRANSPORT — live trains via Huxley2, buses static
