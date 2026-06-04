@@ -661,21 +661,43 @@ function renderBuses() {
 renderBuses(); setInterval(renderBuses, 60*1000);
 
 // ═══════════════════════════════════════════════════════════
-//  RSS via allorigins.win CORS proxy — returns raw XML
+//  RSS — fire 3 CORS proxies simultaneously, take first winner
 // ═══════════════════════════════════════════════════════════
+function makeProxyUrls(rssUrl) {
+  const enc = encodeURIComponent(rssUrl);
+  return [
+    `https://corsproxy.io/?${enc}`,
+    `https://api.allorigins.win/raw?url=${enc}`,
+    `https://api.codetabs.com/v1/proxy?quest=${rssUrl}`,
+  ];
+}
+
+async function tryProxy(proxyUrl, count) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const res = await fetch(proxyUrl, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    const xml = new DOMParser().parseFromString(txt, 'text/xml');
+    if (xml.querySelector('parsererror')) throw new Error('bad xml');
+    const items = [...xml.querySelectorAll('item')].slice(0, count);
+    if (!items.length) throw new Error('empty feed');
+    return items.map(el => ({
+      title:   el.querySelector('title')?.textContent?.trim() || '',
+      link:    el.querySelector('link')?.nextSibling?.nodeValue?.trim()
+               || el.querySelector('guid')?.textContent?.trim() || '#',
+      pubDate: el.querySelector('pubDate')?.textContent?.trim() || '',
+    })).filter(i => i.title && i.title !== '[Removed]');
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
 async function fetchRSS(rssUrl, count = 6) {
-  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const txt = await res.text();
-  const xml = new DOMParser().parseFromString(txt, 'text/xml');
-  if (xml.querySelector('parsererror')) throw new Error('XML parse error');
-  return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
-    title:   el.querySelector('title')?.textContent?.trim() || '',
-    link:    el.querySelector('link')?.nextSibling?.nodeValue?.trim()
-             || el.querySelector('guid')?.textContent?.trim() || '#',
-    pubDate: el.querySelector('pubDate')?.textContent?.trim() || '',
-  })).filter(i => i.title && i.title !== '[Removed]');
+  return Promise.any(makeProxyUrls(rssUrl).map(p => tryProxy(p, count)));
 }
 
 function fmtPub(raw) {
