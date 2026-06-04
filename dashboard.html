@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home Dashboard</title>
+  <title>Kings Norton Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,8 +18,11 @@
       --red:      #f85149;
       --purple:   #bc8cff;
       --orange:   #e3b341;
+      --pink:     #f778ba;
       --muted:    #8b949e;
       --text:     #e6edf3;
+      --sky:      #79c0ff;
+      --chartreuse: #7ee787;
     }
 
     body {
@@ -27,922 +30,877 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 1.5rem;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1rem;
+      padding-bottom: 4rem; /* room for ticker */
     }
 
-    /* ══ HEADER ══════════════════════════════════════ */
+    /* ── HEADER ────────────────────────────────────────── */
     header {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 2rem 2rem 1.5rem;
-      text-align: center;
+      padding: 1.5rem 2rem;
       position: relative;
       overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1.6fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
     }
     header::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--accent), var(--purple), var(--green));
+      background: linear-gradient(90deg, var(--accent), var(--purple), var(--orange), var(--green));
     }
 
-    #greeting {
-      font-size: clamp(0.9rem, 2vw, 1.1rem);
-      color: var(--muted);
-      letter-spacing: 0.05em;
-      margin-bottom: 0.4rem;
-    }
-    #greeting .day-msg { color: var(--orange); font-weight: 600; }
+    .header-left  { display: flex; flex-direction: column; gap: 0.5rem; }
+    .header-right { display: flex; flex-direction: column; gap: 0.5rem; text-align: right; align-items: flex-end; }
 
     #clock {
-      font-size: clamp(3.5rem, 10vw, 6.5rem);
+      text-align: center;
+      font-size: clamp(3rem, 9vw, 6rem);
       font-weight: 200;
       letter-spacing: 0.04em;
-      color: var(--accent);
+      color: var(--orange);
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
-
-    #date {
-      margin-top: 0.4rem;
-      font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+    #greeting {
+      text-align: center;
+      font-size: 0.9rem;
       color: var(--muted);
-      letter-spacing: 0.08em;
+      margin-top: 0.4rem;
+    }
+
+    #date-display {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--sky);
+      letter-spacing: 0.05em;
       text-transform: uppercase;
     }
+    #moon-display {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
 
-    #affirmation-bar {
-      margin-top: 1.25rem;
-      padding: 0.7rem 1.25rem;
-      background: rgba(88, 166, 255, 0.07);
-      border: 1px solid rgba(88, 166, 255, 0.2);
-      border-radius: 8px;
-      font-size: 0.95rem;
-      color: var(--text);
+    .location-tag {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    #wisdom {
+      font-size: 0.78rem;
+      color: var(--muted);
       font-style: italic;
-      min-height: 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      line-height: 1.5;
+      max-width: 220px;
+      text-align: right;
+      transition: opacity 0.6s;
     }
-    #affirmation-bar::before { content: '\2728'; font-style: normal; }
 
-    /* ══ GRID ════════════════════════════════════════ */
-    .grid {
+    /* ── GRIDS ─────────────────────────────────────────── */
+    .grid-3 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: 2fr 2.5fr 1.4fr;
+      gap: 1rem;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1.4fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      header { grid-template-columns: 1fr; text-align: center; }
+      .header-right { align-items: center; text-align: center; }
+      #wisdom { text-align: center; }
+      .grid-3, .grid-4 { grid-template-columns: 1fr; }
     }
 
-    /* ══ CARD BASE ═══════════════════════════════════ */
+    /* ── CARD BASE ─────────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.35rem 1.5rem;
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
-
     .card-title {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 1.1rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .card-title .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
-    }
-    .card-title .dot.green  { background: var(--green); }
-    .card-title .dot.yellow { background: var(--yellow); }
-    .card-title .dot.purple { background: var(--purple); }
-    .card-title .dot.orange { background: var(--orange); }
-    .card-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .card-title .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-    /* ══ WEATHER ══════════════════════════════════════ */
-    .weather-main {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.75rem;
+    /* ── WEATHER ───────────────────────────────────────── */
+    .wx-current { display: flex; align-items: center; gap: 1rem; }
+    .wx-icon { font-size: 2.8rem; line-height: 1; }
+    .wx-temp { font-size: 2.6rem; font-weight: 200; color: var(--orange); line-height: 1; }
+    .wx-desc { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+    .wx-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .wx-meta span { font-size: 0.78rem; color: var(--muted); }
+    .wx-meta strong { color: var(--text); }
+    .wx-quip {
+      font-size: 0.82rem; color: var(--text); font-style: italic;
+      padding: 0.6rem 0.9rem; background: var(--surface2);
+      border-radius: 7px; border-left: 3px solid var(--orange);
     }
-    .weather-icon { font-size: 3.2rem; line-height: 1; }
-    .weather-temp {
-      font-size: 2.8rem;
-      font-weight: 200;
-      color: var(--accent);
-      line-height: 1;
+    .wx-tomorrow { margin-top: 0.25rem; }
+    .wx-tmr-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
     }
-    .weather-desc {
-      font-size: 0.95rem;
-      color: var(--muted);
-      margin-top: 0.2rem;
+    .wx-hourly { display: flex; flex-direction: column; gap: 0.25rem; }
+    .wx-hour {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.8rem; padding: 0.2rem 0;
     }
-    .weather-meta {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 0.75rem;
-    }
-    .weather-meta span { font-size: 0.82rem; color: var(--muted); }
-    .weather-meta strong { color: var(--text); }
+    .wx-hour-time { color: var(--muted); width: 3.5rem; flex-shrink: 0; }
+    .wx-hour-temp { color: var(--orange); width: 3rem; flex-shrink: 0; font-weight: 600; }
+    .wx-hour-desc { color: var(--text); flex: 1; }
+    .wx-hour-rain { color: var(--accent); font-size: 0.75rem; }
 
-    /* ══ CLOTHING ════════════════════════════════════ */
-    #clothing-advice {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      padding: 0.9rem 1rem;
-      background: var(--surface2);
-      border-radius: 8px;
-      border: 1px solid var(--border);
+    /* ── TRAINS ────────────────────────────────────────── */
+    .dep-row {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.7rem; background: var(--surface2);
+      border-radius: 7px; font-size: 0.85rem;
     }
-    #clothing-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
-    #clothing-text { font-size: 0.9rem; line-height: 1.55; color: var(--text); }
-    #clothing-text strong { color: var(--orange); }
+    .dep-time { font-weight: 700; min-width: 3rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+    .dep-dest { flex: 1; }
+    .dep-plat { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+    .dep-status-ok  { color: var(--green);  font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .dep-status-del { color: var(--yellow); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .dep-status-can { color: var(--red);    font-size: 0.78rem; font-weight: 600; white-space: nowrap; text-decoration: line-through; }
 
-    /* ══ NEWS ════════════════════════════════════════ */
+    /* ── BUSES ─────────────────────────────────────────── */
+    .bus-row {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.7rem; background: var(--surface2);
+      border-radius: 7px; font-size: 0.83rem;
+    }
+    .bus-badge {
+      font-size: 0.72rem; font-weight: 800; padding: 0.18rem 0.5rem;
+      border-radius: 5px; min-width: 2.4rem; text-align: center; flex-shrink: 0;
+      background: rgba(188,140,255,0.15); color: var(--purple);
+      border: 1px solid rgba(188,140,255,0.3);
+    }
+    .bus-time { font-weight: 700; color: var(--text); min-width: 3rem; font-variant-numeric: tabular-nums; }
+    .bus-dest { flex: 1; color: var(--muted); }
+    .bus-approx { font-size: 0.72rem; color: var(--muted); }
+
+    /* ── NEWS ──────────────────────────────────────────── */
     .news-item {
-      display: flex;
-      gap: 0.6rem;
-      padding: 0.6rem 0;
+      display: flex; gap: 0.5rem; padding: 0.45rem 0;
       border-bottom: 1px solid var(--border);
-      text-decoration: none;
-      color: var(--text);
-      transition: color 0.15s;
-      align-items: flex-start;
+      text-decoration: none; color: var(--text);
+      transition: color 0.15s; align-items: flex-start;
     }
     .news-item:last-child { border-bottom: none; padding-bottom: 0; }
     .news-item:hover { color: var(--accent); }
-    .news-num {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--muted);
-      padding-top: 0.15rem;
-      min-width: 1.2rem;
-    }
-    .news-headline { font-size: 0.875rem; line-height: 1.45; }
+    .news-num { font-size: 0.68rem; font-weight: 700; color: var(--muted); padding-top: 0.1rem; min-width: 1rem; }
+    .news-headline { font-size: 0.85rem; line-height: 1.4; }
+    .news-time { font-size: 0.7rem; color: var(--muted); margin-top: 0.1rem; }
 
-    /* ══ TRANSPORT ═══════════════════════════════════ */
-    .transport-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .transport-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.7rem 0.9rem;
-      border-radius: 8px;
-      text-decoration: none;
-      color: var(--text);
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .transport-item:hover {
-      border-color: var(--green);
-      background: rgba(63, 185, 80, 0.07);
-      color: var(--green);
-    }
-
-    .transport-badge {
-      font-size: 0.7rem;
-      font-weight: 800;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      min-width: 2.4rem;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .badge-bus   { background: rgba(210, 153, 34, 0.2);  color: var(--yellow); border: 1px solid rgba(210,153,34,0.4); }
-    .badge-train { background: rgba(88, 166, 255, 0.15); color: var(--accent);  border: 1px solid rgba(88,166,255,0.3); }
-
-    .transport-info { flex: 1; }
-    .transport-name { font-size: 0.9rem; font-weight: 500; }
-    .transport-sub  { font-size: 0.73rem; color: var(--muted); margin-top: 0.1rem; }
-
-    .transport-arrow { color: var(--muted); font-size: 0.8rem; }
-
-    /* ══ LINKS ═══════════════════════════════════════ */
-    .links-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
-    .links-list li a {
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      padding: 0.6rem 0.85rem;
-      border-radius: 8px;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 0.9rem;
-      border: 1px solid transparent;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-    }
-    .links-list li a:hover {
-      background: rgba(88, 166, 255, 0.07);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .link-icon  { font-size: 1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
-    .link-label { flex: 1; }
-    .link-badge {
-      font-size: 0.67rem;
-      padding: 0.12rem 0.4rem;
-      border-radius: 99px;
-      background: rgba(88, 166, 255, 0.12);
-      color: var(--accent);
-      border: 1px solid rgba(88, 166, 255, 0.25);
-    }
-
-    /* ══ CALENDAR ════════════════════════════════════ */
-    .cal-section { margin-bottom: 0.9rem; }
-    .cal-label {
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
-    }
+    /* ── CALENDAR ──────────────────────────────────────── */
     .cal-event {
-      display: flex; flex-direction: column; gap: 0.25rem;
-      padding: 0.7rem 1rem; background: var(--surface2);
-      border-radius: 8px; border-left: 3px solid var(--orange);
-      margin-bottom: 0.45rem;
+      padding: 0.55rem 0.85rem; background: var(--surface2);
+      border-radius: 7px; border-left: 3px solid var(--orange);
+      margin-bottom: 0.4rem;
     }
-    .cal-event.urgent { border-left-color: var(--red); }
-    .cal-event.tomorrow { border-left-color: var(--border); opacity: 0.75; }
-    .cal-event-title { font-size: 0.92rem; font-weight: 500; }
-    .cal-reminder {
-      font-size: 0.8rem; font-weight: 600; color: var(--orange);
-      display: flex; align-items: center; gap: 0.35rem;
-    }
-    .cal-reminder.urgent { color: var(--red); }
-    .cal-empty {
-      padding: 0.7rem 1rem; background: var(--surface2);
-      border-radius: 8px; font-size: 0.9rem; color: var(--green);
-    }
+    .cal-event-time { font-size: 0.72rem; color: var(--muted); }
+    .cal-event-title { font-size: 0.88rem; font-weight: 500; margin-top: 0.1rem; }
     .cal-setup {
-      padding: 0.9rem 1rem; background: var(--surface2);
-      border-radius: 8px; font-size: 0.82rem; color: var(--muted);
-      line-height: 1.6; border: 1px dashed var(--border);
+      padding: 0.8rem 0.9rem; background: var(--surface2);
+      border-radius: 7px; font-size: 0.8rem; color: var(--muted);
+      line-height: 1.65; border: 1px dashed var(--border);
     }
     .cal-setup code {
-      background: var(--bg); padding: 0.15rem 0.4rem;
-      border-radius: 4px; color: var(--accent); font-size: 0.78rem;
+      background: var(--bg); padding: 0.1rem 0.35rem;
+      border-radius: 3px; color: var(--accent); font-size: 0.75rem;
     }
 
-    /* ══ TRANSPORT LIVE ══════════════════════════════ */
-    .dep-section { margin-bottom: 0.9rem; }
-    .dep-label {
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    /* ── MUSIC TICKER ──────────────────────────────────── */
+    #ticker-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 2.6rem;
+      background: #0d0d17;
+      border-top: 1px solid rgba(247,120,186,0.3);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
     }
-    .dep-row {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.55rem 0.75rem; background: var(--surface2);
-      border-radius: 7px; margin-bottom: 0.35rem; font-size: 0.875rem;
+    #ticker-label {
+      flex-shrink: 0;
+      padding: 0 0.9rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--pink);
+      border-right: 1px solid rgba(247,120,186,0.3);
+      white-space: nowrap;
     }
-    .dep-time { font-weight: 700; min-width: 3.2rem; font-variant-numeric: tabular-nums; color: var(--accent); }
-    .dep-dest { flex: 1; }
-    .dep-plat { font-size: 0.72rem; color: var(--muted); }
-    .on-time   { color: var(--green);  font-size: 0.8rem; font-weight: 600; }
-    .delayed   { color: var(--yellow); font-size: 0.8rem; font-weight: 600; }
-    .cancelled { color: var(--red);    font-size: 0.8rem; font-weight: 600; text-decoration: line-through; }
-    .dep-bus-row {
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.5rem 0.75rem; background: var(--surface2);
-      border-radius: 7px; margin-bottom: 0.35rem;
-      font-size: 0.82rem; color: var(--muted);
+    #ticker-track { flex: 1; overflow: hidden; position: relative; }
+    #ticker-content {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 0.82rem;
+      color: var(--text);
+      top: 50%;
+      transform: translateY(-50%);
     }
-    .dep-empty { font-size: 0.875rem; color: var(--muted); padding: 0.5rem 0; }
+    #ticker-content .t-sep { color: var(--pink); margin: 0 0.7rem; }
 
-    /* ══ NEWS SECTIONS ═══════════════════════════════ */
-    .news-section { margin-bottom: 1rem; }
-    .news-section:last-child { margin-bottom: 0; }
-    .news-section-label {
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
-    }
-
-    /* ══ STATUS / LOADING ════════════════════════════ */
-    .loading { color: var(--muted); font-size: 0.875rem; animation: pulse 1.5s ease-in-out infinite; }
-    .error   { color: var(--red);   font-size: 0.875rem; }
+    /* ── LOADING / ERROR ───────────────────────────────── */
+    .loading { color: var(--muted); font-size: 0.85rem; font-style: italic; animation: pulse 1.4s ease-in-out infinite; }
+    .err { color: var(--red); font-size: 0.82rem; }
+    .quip-wrap { padding: 0.5rem 0.1rem; }
+    .quip-main { font-size: 0.9rem; font-weight: 600; color: var(--yellow); }
+    .quip-sub  { font-size: 0.82rem; color: var(--muted); font-style: italic; margin-top: 0.25rem; }
+    .empty-note { font-size: 0.85rem; color: var(--green); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-    /* ══ FOOTER ══════════════════════════════════════ */
-    footer {
-      text-align: center;
-      font-size: 0.72rem;
-      color: var(--border);
-      padding-top: 0.25rem;
+    /* ── MISC ──────────────────────────────────────────── */
+    .updated-note { font-size: 0.67rem; color: var(--border); text-align: right; margin-top: 0.3rem; }
+    .section-label {
+      font-size: 0.67rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem;
+      margin-top: 0.6rem;
     }
-    footer span { color: var(--muted); }
+    .section-label:first-child { margin-top: 0; }
   </style>
 </head>
 <body>
 
-  <!-- ── HEADER ────────────────────────────────────── -->
-  <header>
-    <div id="greeting">Welcome back</div>
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <div id="date-display">—</div>
+    <div id="moon-display">—</div>
+  </div>
+  <div>
     <div id="clock">00:00:00</div>
-    <div id="date">Loading…</div>
-    <div id="affirmation-bar"><span class="loading">Loading your affirmation…</span></div>
-  </header>
+    <div id="greeting"></div>
+  </div>
+  <div class="header-right">
+    <div class="location-tag">Kings Norton · B38</div>
+    <div id="wisdom"></div>
+  </div>
+</header>
 
-  <!-- ── CALENDAR ─────────────────────────────────── -->
+<!-- ── ROW 1: Weather | Trains | Calendar ─────────────── -->
+<div class="grid-3">
+
   <div class="card">
-    <div class="card-title"><span class="dot orange"></span>School Calendar &mdash; Today &amp; Tomorrow</div>
+    <div class="card-title" style="color:var(--orange)"><span class="dot" style="background:var(--orange)"></span>Birmingham Weather</div>
+    <div id="weather-wrap"><span class="loading">Fetching weather…</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span>Trains → Birmingham</div>
+    <div id="trains-wrap"><span class="loading">Loading departures…</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--accent)"><span class="dot" style="background:var(--accent)"></span>Calendar</div>
     <div id="cal-wrap"><span class="loading">Loading calendar…</span></div>
   </div>
 
-  <!-- ── ROW 1: Weather + News ─────────────────────── -->
-  <div class="grid">
+</div>
 
-    <!-- Weather & Clothing -->
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>Birmingham Weather</div>
-      <div id="weather-wrap"><span class="loading">Fetching weather…</span></div>
-    </div>
+<!-- ── ROW 2: Buses | Brum | UK News | Sport ──────────── -->
+<div class="grid-4">
 
-    <!-- News -->
-    <div class="card">
-      <div class="card-title"><span class="dot yellow"></span>Birmingham News &amp; BCFC</div>
-      <div class="news-section">
-        <div class="news-section-label">&#128505; West Midlands</div>
-        <div id="news-brum-wrap"><span class="loading">Loading…</span></div>
-      </div>
-      <div class="news-section">
-        <div class="news-section-label" style="color:#005daa">&#9917; Birmingham City</div>
-        <div id="news-bcfc-wrap"><span class="loading">Loading…</span></div>
-      </div>
-    </div>
-
+  <div class="card">
+    <div class="card-title" style="color:var(--purple)"><span class="dot" style="background:var(--purple)"></span>Buses 45 &middot; 49</div>
+    <div id="buses-wrap"></div>
   </div>
 
-  <!-- ── ROW 2: UK News + Music News ──────────────── -->
-  <div class="grid">
-
-    <!-- UK & World News -->
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>UK &amp; World News</div>
-      <div id="news-uk-wrap"><span class="loading">Loading…</span></div>
-    </div>
-
-    <!-- Music News -->
-    <div class="card">
-      <div class="card-title"><span class="dot purple"></span>Music News</div>
-      <div class="news-section">
-        <div class="news-section-label">&#127925; NME</div>
-        <div id="news-nme-wrap"><span class="loading">Loading…</span></div>
-      </div>
-      <div class="news-section">
-        <div class="news-section-label">&#127916; BBC Music</div>
-        <div id="news-bbcmusic-wrap"><span class="loading">Loading…</span></div>
-      </div>
-    </div>
-
+  <div class="card">
+    <div class="card-title" style="color:var(--orange)"><span class="dot" style="background:var(--orange)"></span>Birmingham</div>
+    <div id="brum-wrap"><span class="loading">Loading…</span></div>
   </div>
 
-  <!-- ── ROW 3: Transport + Family Links ───────────── -->
-  <div class="grid">
-
-    <!-- Transport -->
-    <div class="card">
-      <div class="card-title"><span class="dot green"></span>West Midlands Transport</div>
-      <div id="transport-wrap"><span class="loading">Loading departures…</span></div>
-    </div>
-
-    <!-- Family Links -->
-    <div class="card">
-      <div class="card-title"><span class="dot purple"></span>Family Links</div>
-      <ul class="links-list">
-        <li><a href="https://calendar.google.com" target="_blank" rel="noopener">
-          <span class="link-icon">&#128197;</span>
-          <span class="link-label">Family Calendar</span>
-        </a></li>
-        <li><a href="https://drive.google.com" target="_blank" rel="noopener">
-          <span class="link-icon">&#128190;</span>
-          <span class="link-label">Google Drive</span>
-        </a></li>
-        <li><a href="http://localhost:8096" target="_blank" rel="noopener">
-          <span class="link-icon">&#127916;</span>
-          <span class="link-label">Jellyfin</span>
-          <span class="link-badge">local</span>
-        </a></li>
-        <li><a href="http://localhost:8888" target="_blank" rel="noopener">
-          <span class="link-icon">&#128247;</span>
-          <span class="link-label">Photos</span>
-          <span class="link-badge">local</span>
-        </a></li>
-        <li><a href="http://localhost:9117" target="_blank" rel="noopener">
-          <span class="link-icon">&#128269;</span>
-          <span class="link-label">Jackett</span>
-          <span class="link-badge">local</span>
-        </a></li>
-        <li><a href="http://localhost:8181" target="_blank" rel="noopener">
-          <span class="link-icon">&#128214;</span>
-          <span class="link-label">Tautulli</span>
-          <span class="link-badge">local</span>
-        </a></li>
-      </ul>
-    </div>
-
+  <div class="card">
+    <div class="card-title" style="color:var(--sky)"><span class="dot" style="background:var(--sky)"></span>UK News</div>
+    <div id="news-wrap"><span class="loading">Loading…</span></div>
   </div>
 
-  <footer>
-    Home Dashboard &mdash; <span id="footer-host">localhost:8080</span>
-    &mdash; <span>Updates: weather 10 min &bull; news 30 min &bull; trains 1 min</span>
-  </footer>
+  <div class="card">
+    <div class="card-title" style="color:var(--chartreuse)"><span class="dot" style="background:var(--chartreuse)"></span>Sport</div>
+    <div id="sport-wrap"><span class="loading">Loading…</span></div>
+  </div>
 
-  <script>
-    // ═══════════════════════════════════════════════════
-    //  CLOCK, DATE & GREETING
-    // ═══════════════════════════════════════════════════
-    const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const MONTHS = ['January','February','March','April','May','June',
-                    'July','August','September','October','November','December'];
+</div>
 
-    function pad(n) { return String(n).padStart(2, '0'); }
+<!-- ── MUSIC TICKER ────────────────────────────────────── -->
+<div id="ticker-bar">
+  <div id="ticker-label">&#9834; Music</div>
+  <div id="ticker-track">
+    <div id="ticker-content"><span class="loading">Loading music news…</span></div>
+  </div>
+</div>
 
-    function getDayMessage(day) {
-      const msgs = {
-        0: 'Enjoy your Sunday &#9749;',
-        1: 'New week, new start &#128170;',
-        2: 'Keep going &#9889;',
-        3: 'Halfway there &#127942;',
-        4: 'Nearly Friday! &#128293;',
-        5: "It's Friday! &#127881;",
-        6: 'Happy Saturday &#127774;'
-      };
-      return msgs[day] || '';
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CLOCK + GREETING
+// ═══════════════════════════════════════════════════════════
+const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function greeting(h) {
+  if (h >= 5  && h < 12) return 'Good morning';
+  if (h >= 12 && h < 17) return 'Good afternoon';
+  if (h >= 17 && h < 21) return 'Good evening';
+  return "You're up late";
+}
+
+function tick() {
+  const n = new Date(), h = n.getHours();
+  document.getElementById('clock').textContent = `${pad(h)}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  document.getElementById('date-display').textContent =
+    `${DAYS[n.getDay()].toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].toUpperCase()} ${n.getFullYear()}`;
+  document.getElementById('greeting').textContent = greeting(h);
+  updateMoon(n);
+}
+tick(); setInterval(tick, 1000);
+
+// ═══════════════════════════════════════════════════════════
+//  MOON PHASE
+// ═══════════════════════════════════════════════════════════
+function getMoonPhase(d) {
+  const known   = new Date(2000, 0, 6);
+  const diff    = (d - known) / 86400000;
+  const phase   = ((diff % 29.53) + 29.53) % 29.53;
+  const names   = ['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous',
+                   'Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+  const emojis  = ['🌑','🌒','🌓','🌔',
+                   '🌕','🌖','🌗','🌘'];
+  const i = Math.floor(phase / 29.53 * 8);
+  return { name: names[i], emoji: emojis[i] };
+}
+
+function updateMoon(d) {
+  const m = getMoonPhase(d);
+  document.getElementById('moon-display').textContent = `${m.emoji}  ${m.name}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  WISDOM TICKER
+// ═══════════════════════════════════════════════════════════
+const WISDOMS = [
+  "Kings Norton: est. 7th century. Tesco: 2003.",
+  "The 49 will come. Eventually. In its own time.",
+  "Network Rail: always believing in tomorrow.",
+  "Birmingham has more canals than Venice. Venice has fewer delays.",
+  "You are approximately 4 miles from the Bull Ring.",
+  "Kings Norton Green: still there, still lovely, still no parking.",
+  "Longbridge: where Rovers once roamed.",
+  "If the 45 is late, consider it a gift of unplanned contemplation.",
+  "West Midlands Rail apologises for any inconvenience.",
+  "The Archers was first broadcast near here. Make of that what you will.",
+];
+let _wi = 0;
+function nextWisdom() {
+  const el = document.getElementById('wisdom');
+  el.style.opacity = 0;
+  setTimeout(() => {
+    el.textContent = WISDOMS[_wi++ % WISDOMS.length];
+    el.style.opacity = 1;
+  }, 600);
+}
+nextWisdom(); setInterval(nextWisdom, 30000);
+
+// ═══════════════════════════════════════════════════════════
+//  WEATHER — wttr.in (no API key, CORS enabled)
+// ═══════════════════════════════════════════════════════════
+const WEATHER_QUIPS = {
+  113: ["Genuinely nice out. Don't waste it.", "Sun's out. Birmingham looks almost attractive."],
+  default: ["Classic Brummie sky.", "Could be worse. Could be raining."],
+  rain: ["Classic.", "It's grim up the Midlands.", "Wet. Very wet."],
+  storm: ["Absolutely biblical out there.", "Stay in. Seriously."],
+  snow: ["Snow in Birmingham. Chaos incoming.", "One inch. City grinds to a halt."],
+};
+
+function wttrIcon(code) {
+  const c = parseInt(code);
+  if (c === 113) return { i: '☀', label: 'Sunny' };
+  if (c === 116) return { i: '⛅', label: 'Partly cloudy' };
+  if (c === 119 || c === 122) return { i: '☁', label: 'Cloudy' };
+  if ([143,248,260].includes(c)) return { i: '🌫', label: 'Foggy' };
+  if ([176,263,266,293,296].includes(c)) return { i: '🌦', label: 'Light rain' };
+  if ([299,302,305,308].includes(c)) return { i: '🌧', label: 'Rain' };
+  if ([200,386,389,392,395].includes(c)) return { i: '⛈', label: 'Thunderstorm' };
+  if (c >= 179 && c <= 395) return { i: '🌨', label: 'Snow / sleet' };
+  return { i: '🌤', label: 'Mixed' };
+}
+
+function clothingNarrative(tempC, feelsC, code) {
+  const t = parseInt(feelsC);
+  const isRain  = [176,263,266,293,296,299,302,305,308].includes(parseInt(code));
+  const isSnow  = parseInt(code) >= 179 && parseInt(code) <= 338;
+  const isStorm = [200,386,389,392,395].includes(parseInt(code));
+  const rain    = isRain ? ' Bring an umbrella.' : '';
+  if (isStorm) return 'Stormy out there — stay safe if you must go out.';
+  if (isSnow)  return 'Snow expected. Warm coat, waterproof boots, gloves.';
+  if (t <= 0)  return 'Freezing. Full winter kit — thermals, coat, gloves, scarf.';
+  if (t <= 5)  return `Very cold. Heavy coat, scarf and gloves essential.${rain}`;
+  if (t <= 10) return `Cold — you'll need a proper coat.${rain}`;
+  if (t <= 14) return `Jacket weather. A mid-layer will do.${rain}`;
+  if (t <= 18) return `Mild. Light jacket or cardigan.${rain}`;
+  if (t <= 22) return `Warm and pleasant. T-shirt weather.${rain}`;
+  return 'Hot one! Light clothes, sun cream, stay hydrated.';
+}
+
+function getWeatherQuip(code) {
+  const c = parseInt(code);
+  if (c === 113) return WEATHER_QUIPS[113][Math.random() < 0.5 ? 0 : 1];
+  if ([200,386,389].includes(c)) return WEATHER_QUIPS.storm[0];
+  if (c >= 179 && c <= 338) return WEATHER_QUIPS.snow[Math.random() < 0.5 ? 0 : 1];
+  if ([176,263,266,293,296,299,302,305,308].includes(c))
+    return WEATHER_QUIPS.rain[Math.floor(Math.random()*3)];
+  return WEATHER_QUIPS.default[Math.random() < 0.5 ? 0 : 1];
+}
+
+function renderHourly(hourly) {
+  const now = new Date().getHours();
+  return hourly.filter(h => {
+    const hr = Math.floor(parseInt(h.time) / 100);
+    return hr >= now;
+  }).slice(0, 4).map(h => {
+    const hr   = Math.floor(parseInt(h.time) / 100);
+    const desc = h.weatherDesc[0].value;
+    const temp = h.tempC;
+    const rain = parseFloat(h.precipMM || 0);
+    const icon = wttrIcon(h.weatherCode);
+    return `<div class="wx-hour">
+      <span class="wx-hour-time">${pad(hr)}:00</span>
+      <span style="font-size:1rem">${icon.i}</span>
+      <span class="wx-hour-temp">${temp}°</span>
+      <span class="wx-hour-desc">${desc}</span>
+      ${rain > 0 ? `<span class="wx-hour-rain">${rain}mm</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function fetchWeather() {
+  const wrap = document.getElementById('weather-wrap');
+  try {
+    const res  = await fetch('https://wttr.in/Kings+Norton,Birmingham?format=j1',
+                             { headers: { 'User-Agent': 'curl/7.68.0' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d    = await res.json();
+    const cur  = d.current_condition[0];
+    const icon = wttrIcon(cur.weatherCode);
+    const tmr  = d.weather[1];
+
+    wrap.innerHTML = `
+      <div class="wx-current">
+        <div class="wx-icon">${icon.i}</div>
+        <div>
+          <div class="wx-temp">${cur.temp_C}°C</div>
+          <div class="wx-desc">${icon.label}</div>
+        </div>
+      </div>
+      <div class="wx-meta">
+        <span>Feels <strong>${cur.FeelsLikeC}°C</strong></span>
+        <span>Humidity <strong>${cur.humidity}%</strong></span>
+        <span>Wind <strong>${Math.round(parseInt(cur.windspeedKmph)*0.621)} mph</strong></span>
+      </div>
+      <div class="wx-quip">${clothingNarrative(cur.temp_C, cur.FeelsLikeC, cur.weatherCode)}</div>
+      <div class="wx-quip" style="border-color:var(--muted);color:var(--muted);font-style:normal">${getWeatherQuip(cur.weatherCode)}</div>
+      <div class="wx-tomorrow">
+        <div class="section-label">Tomorrow — Hi ${tmr.maxtempC}° Lo ${tmr.mintempC}°</div>
+        <div class="wx-hourly">${renderHourly(tmr.hourly)}</div>
+      </div>
+      <div class="updated-note">wttr.in · ${new Date().toLocaleTimeString('en-GB')}</div>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="quip-wrap">
+      <div class="quip-main">Try looking out the window.</div>
+      <div class="quip-sub">wttr.in unavailable (${err.message})</div>
+    </div>`;
+  }
+}
+fetchWeather(); setInterval(fetchWeather, 10*60*1000);
+
+// ═══════════════════════════════════════════════════════════
+//  TRAINS — Huxley2 / National Rail
+// ═══════════════════════════════════════════════════════════
+async function fetchTrains() {
+  const wrap = document.getElementById('trains-wrap');
+  try {
+    const res  = await fetch('https://huxley2.azurewebsites.net/departures/KNN/12');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const all  = data.trainServices || [];
+
+    const bhm = all.filter(s => {
+      const dest = (s.destination || [{}])[0];
+      const via  = dest.via || '';
+      return /Birmingham/i.test(dest.locationName || '') || /Birmingham/i.test(via);
+    });
+
+    if (!bhm.length) {
+      wrap.innerHTML = `<div class="quip-wrap">
+        <div class="quip-main">No Birmingham services right now.</div>
+        <div class="quip-sub">Network Rail: working hard, probably.</div>
+      </div>`;
+      return;
     }
 
-    function getGreeting(h) {
-      if (h >= 5  && h < 12) return 'Good morning';
-      if (h >= 12 && h < 17) return 'Good afternoon';
-      if (h >= 17 && h < 21) return 'Good evening';
-      return "You're up late &#128564;";
+    const rows = bhm.slice(0, 6).map(s => {
+      const dest  = (s.destination || [{}])[0].locationName || 'Unknown';
+      const sched = s.std || '??:??';
+      const etd   = s.etd || '';
+      const plat  = s.platform ? `<span class="dep-plat">Plt ${s.platform}</span>` : '';
+      let status;
+      if      (etd === 'On time')   status = `<span class="dep-status-ok">&#9679; On time</span>`;
+      else if (etd === 'Cancelled') status = `<span class="dep-status-can">&#10005; Cancelled</span>`;
+      else if (etd === 'Delayed')   status = `<span class="dep-status-del">&#9650; Delayed</span>`;
+      else                          status = `<span class="dep-status-del">&#8594; ${etd}</span>`;
+      return `<div class="dep-row">
+        <span class="dep-time">${sched}</span>
+        <span class="dep-dest">${dest}</span>
+        ${plat}
+        ${status}
+      </div>`;
+    }).join('');
+
+    const upd = data.generatedAt ? data.generatedAt.slice(11,16) : '';
+    wrap.innerHTML = rows + `<div class="updated-note">National Rail · updated ${upd}</div>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="quip-wrap">
+      <div class="quip-main">Huxley's gone for a brew.</div>
+      <div class="quip-sub">Leaves on the line, no doubt. (${err.message})</div>
+    </div>`;
+  }
+}
+fetchTrains(); setInterval(fetchTrains, 60*1000);
+
+// ═══════════════════════════════════════════════════════════
+//  BUSES — smart interval timetable
+//  Routes 45 & 49 from Kings Norton (approximate schedule)
+// ═══════════════════════════════════════════════════════════
+const BUS_SCHEDULE = {
+  '45': { dest: 'City Centre', interval: 10, first: '05:30', last: '23:15', weekend_interval: 12 },
+  '49': { dest: 'Solihull',    interval: 12, first: '06:00', last: '22:40', weekend_interval: 15 },
+};
+
+function timeToMins(t) {
+  const [h, m] = t.split(':').map(Number); return h*60 + m;
+}
+function minsToTime(m) {
+  return `${pad(Math.floor(m/60) % 24)}:${pad(m % 60)}`;
+}
+
+function renderBuses() {
+  const wrap = document.getElementById('buses-wrap');
+  const now  = new Date();
+  const dow  = now.getDay(); // 0=Sun, 6=Sat
+  const mins = now.getHours()*60 + now.getMinutes();
+  const isWeekend = dow === 0 || dow === 6;
+
+  const allDeps = [];
+  for (const [route, info] of Object.entries(BUS_SCHEDULE)) {
+    const interval = isWeekend ? info.weekend_interval : info.interval;
+    const first    = timeToMins(info.first);
+    const last     = timeToMins(info.last);
+    let dep = first;
+    while (dep <= last) {
+      if (dep >= mins) allDeps.push({ route, time: dep, dest: info.dest });
+      dep += interval;
     }
+  }
 
-    function tick() {
-      const now = new Date();
-      const h = now.getHours();
-      document.getElementById('clock').textContent =
-        pad(h) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-      document.getElementById('date').textContent =
-        DAYS[now.getDay()] + ', ' +
-        now.getDate() + ' ' + MONTHS[now.getMonth()] + ' ' + now.getFullYear();
-      document.getElementById('greeting').innerHTML =
-        getGreeting(h) + ' &mdash; <span class="day-msg">' + getDayMessage(now.getDay()) + '</span>';
+  allDeps.sort((a, b) => a.time - b.time);
+  const next = allDeps.slice(0, 8);
+
+  if (!next.length) {
+    wrap.innerHTML = `<div class="quip-wrap">
+      <div class="quip-main">The 49 is running on vibes.</div>
+      <div class="quip-sub">No more services today.</div>
+    </div>`;
+    return;
+  }
+
+  wrap.innerHTML = next.map(d => `
+    <div class="bus-row">
+      <span class="bus-badge">${d.route}</span>
+      <span class="bus-time">${minsToTime(d.time)}</span>
+      <span class="bus-dest">${d.dest}</span>
+      <span class="bus-approx">approx</span>
+    </div>`).join('') + `<div class="updated-note">Based on scheduled timetable · actual times may vary</div>`;
+}
+renderBuses(); setInterval(renderBuses, 60*1000);
+
+// ═══════════════════════════════════════════════════════════
+//  RSS PARSING
+// ═══════════════════════════════════════════════════════════
+async function parseRSS(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const txt = await res.text();
+  const xml = new DOMParser().parseFromString(txt, 'text/xml');
+  return [...xml.querySelectorAll('item')].slice(0, 6).map(el => {
+    const title = el.querySelector('title')?.textContent?.trim() || '';
+    const link  = el.querySelector('link')?.nextSibling?.nodeValue?.trim()
+               || el.querySelector('guid')?.textContent?.trim() || '#';
+    const pub   = el.querySelector('pubDate')?.textContent?.trim() || '';
+    return { title, link, pub };
+  }).filter(i => i.title && i.title !== '[Removed]');
+}
+
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+async function parseRSSviaProxy(url) {
+  const res = await fetch(CORS_PROXY + encodeURIComponent(url));
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const txt = await res.text();
+  const xml = new DOMParser().parseFromString(txt, 'text/xml');
+  return [...xml.querySelectorAll('item')].slice(0, 15).map(el => {
+    const title = el.querySelector('title')?.textContent?.trim() || '';
+    const link  = el.querySelector('link')?.nextSibling?.nodeValue?.trim()
+               || el.querySelector('guid')?.textContent?.trim() || '#';
+    return { title, link };
+  }).filter(i => i.title);
+}
+
+function fmtPub(raw) {
+  if (!raw) return '';
+  try {
+    const d = new Date(raw);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) {
+      return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }
-    tick();
-    setInterval(tick, 1000);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  } catch { return ''; }
+}
 
-    // ═══════════════════════════════════════════════════
-    //  AFFIRMATION
-    // ═══════════════════════════════════════════════════
-    const FALLBACK_AFFIRMATIONS = [
-      "You are doing better than you think.",
-      "Small steps still move you forward.",
-      "You have everything you need within you.",
-      "Today is full of possibility.",
-      "You are enough, exactly as you are.",
-      "Progress, not perfection.",
-      "You are stronger than you know.",
-      "Good things are coming your way.",
-      "You make a difference every single day.",
-      "Believe in yourself — others do."
-    ];
+function renderNews(items, limit=4) {
+  return items.slice(0, limit).map((it, i) => {
+    const headline = it.title.replace(/ - BBC.*$/, '').trim();
+    const time     = fmtPub(it.pub);
+    return `<a class="news-item" href="${it.link}" target="_blank" rel="noopener">
+      <span class="news-num">${i+1}</span>
+      <span>
+        <div class="news-headline">${headline}</div>
+        ${time ? `<div class="news-time">${time}</div>` : ''}
+      </span>
+    </a>`;
+  }).join('');
+}
 
-    async function fetchAffirmation() {
-      const el = document.getElementById('affirmation-bar');
-      try {
-        const res = await fetch('https://www.affirmations.dev/');
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        el.innerHTML = '&#10024; ' + data.affirmation;
-      } catch {
-        const r = FALLBACK_AFFIRMATIONS[Math.floor(Math.random() * FALLBACK_AFFIRMATIONS.length)];
-        el.innerHTML = '&#10024; ' + r;
-      }
+function showErr(wrapId, quipMain, quipSub) {
+  document.getElementById(wrapId).innerHTML = `<div class="quip-wrap">
+    <div class="quip-main">${quipMain}</div>
+    <div class="quip-sub">${quipSub}</div>
+  </div>`;
+}
+
+// Birmingham news
+async function fetchBrum() {
+  try {
+    const items = await parseRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml');
+    document.getElementById('brum-wrap').innerHTML = renderNews(items, 5);
+  } catch (e) {
+    showErr('brum-wrap', 'No Brum news.', 'Either very good or very bad sign.');
+  }
+}
+
+// UK news
+async function fetchNews() {
+  try {
+    const items = await parseRSS('https://feeds.bbci.co.uk/news/uk/rss.xml');
+    document.getElementById('news-wrap').innerHTML = renderNews(items, 5);
+  } catch (e) {
+    showErr('news-wrap', 'BBC gone quiet.', 'Probably a licence fee dispute.');
+  }
+}
+
+// Sport
+async function fetchSport() {
+  try {
+    const items = await parseRSS('https://feeds.bbci.co.uk/sport/rss.xml');
+    document.getElementById('sport-wrap').innerHTML = renderNews(items, 4);
+  } catch (e) {
+    showErr('sport-wrap', 'Sport taking a breather.', 'Must be a rest day.');
+  }
+}
+
+fetchBrum();  setInterval(fetchBrum,  30*60*1000);
+fetchNews();  setInterval(fetchNews,  30*60*1000);
+fetchSport(); setInterval(fetchSport, 30*60*1000);
+
+// ═══════════════════════════════════════════════════════════
+//  CALENDAR — iCal via /cal proxy (nginx)
+// ═══════════════════════════════════════════════════════════
+function icalUnfold(t) { return t.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,''); }
+
+function icalDate(str) {
+  if (!str) return null;
+  const s = str.replace(/[TZ:\-]/g,'');
+  const y=+s.slice(0,4), m=+s.slice(4,6)-1, d=+s.slice(6,8);
+  return isNaN(y) ? null : new Date(y,m,d);
+}
+
+function parseICal(raw) {
+  const lines = icalUnfold(raw).split(/\r?\n/);
+  const events = []; let e = null;
+  for (const line of lines) {
+    if (line==='BEGIN:VEVENT') { e={}; continue; }
+    if (line==='END:VEVENT')   { if(e) events.push(e); e=null; continue; }
+    if (!e) continue;
+    const ci = line.indexOf(':'); if (ci<0) continue;
+    const prop=line.slice(0,ci), val=line.slice(ci+1), base=prop.split(';')[0].toUpperCase();
+    if (base==='DTSTART') {
+      e.DTSTART=val; e.ALLDAY = prop.toUpperCase().includes('VALUE=DATE') || /^\d{8}$/.test(val);
+    } else { e[base]=val; }
+  }
+  return events;
+}
+
+function occursOn(e, t) {
+  if (!e.DTSTART) return false;
+  const start=icalDate(e.DTSTART); if (!start) return false;
+  const day=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  if (!e.RRULE) return start.toDateString()===day.toDateString();
+  if (start>day) return false;
+  const rule=Object.fromEntries(e.RRULE.split(';').map(p=>p.split('=')));
+  if (rule.UNTIL && icalDate(rule.UNTIL)<day) return false;
+  const iv=parseInt(rule.INTERVAL||'1');
+  if (rule.FREQ==='DAILY') return Math.round((day-start)/86400000)%iv===0;
+  if (rule.FREQ==='WEEKLY') {
+    const DOW={SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+    const days=rule.BYDAY?.split(',').map(d=>d.replace(/[+\-\d]/g,''))||null;
+    if (days && !days.some(d=>DOW[d]===day.getDay())) return false;
+    const s0=new Date(start); s0.setDate(s0.getDate()-s0.getDay());
+    const t0=new Date(day);   t0.setDate(t0.getDate()-t0.getDay());
+    return Math.round((t0-s0)/(7*86400000))%iv===0;
+  }
+  if (rule.FREQ==='MONTHLY') return start.getDate()===day.getDate();
+  if (rule.FREQ==='YEARLY')  return start.getMonth()===day.getMonth()&&start.getDate()===day.getDate();
+  return false;
+}
+
+async function fetchCalendar() {
+  const wrap = document.getElementById('cal-wrap');
+  try {
+    const res = await fetch('/cal');
+    if (res.status===404) throw new Error('proxy_not_configured');
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    if (!text.includes('BEGIN:VCALENDAR')) throw new Error('not_ical');
+    const events = parseICal(text);
+    const today    = new Date();
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+    const todayEvs = events.filter(e=>e.ALLDAY && occursOn(e,today));
+    const tmrEvs   = events.filter(e=>e.ALLDAY && occursOn(e,tomorrow));
+
+    let html = '<div class="section-label">Today</div>';
+    if (todayEvs.length) {
+      html += todayEvs.map(e=>`<div class="cal-event">
+        <div class="cal-event-title">&#128197; ${e.SUMMARY||'(no title)'}</div>
+      </div>`).join('');
+    } else {
+      html += '<div class="empty-note">&#10003; Nothing on today</div>';
     }
-    fetchAffirmation();
-
-    // ═══════════════════════════════════════════════════
-    //  WEATHER + CLOTHING ADVICE
-    // ═══════════════════════════════════════════════════
-    const WEATHER_URL =
-      'https://api.open-meteo.com/v1/forecast' +
-      '?latitude=52.4862&longitude=-1.8904' +
-      '&current=temperature_2m,apparent_temperature,weathercode,' +
-      'windspeed_10m,relative_humidity_2m,precipitation' +
-      '&wind_speed_unit=mph' +
-      '&timezone=Europe%2FLondon';
-
-    function wmoInterpret(code) {
-      if (code === 0)  return { label: 'Clear sky',          icon: '&#9728;' };
-      if (code <= 2)   return { label: 'Mostly clear',       icon: '&#9925;' };
-      if (code === 3)  return { label: 'Overcast',           icon: '&#9729;' };
-      if (code <= 49)  return { label: 'Foggy',              icon: '&#127787;' };
-      if (code <= 55)  return { label: 'Drizzle',            icon: '&#127746;' };
-      if (code <= 67)  return { label: 'Rainy',              icon: '&#127783;' };
-      if (code <= 77)  return { label: 'Snowy',              icon: '&#10052;' };
-      if (code <= 82)  return { label: 'Rain showers',       icon: '&#127783;' };
-      if (code <= 86)  return { label: 'Snow showers',       icon: '&#127784;' };
-      if (code === 95) return { label: 'Thunderstorm',       icon: '&#9928;' };
-      if (code <= 99)  return { label: 'Thunder &amp; hail', icon: '&#9928;' };
-      return { label: 'Unknown', icon: '&#10068;' };
+    html += '<div class="section-label" style="margin-top:0.75rem">Tomorrow</div>';
+    if (tmrEvs.length) {
+      html += tmrEvs.map(e=>`<div class="cal-event" style="border-left-color:var(--border);opacity:0.7">
+        <div class="cal-event-title">&#128197; ${e.SUMMARY||'(no title)'}</div>
+      </div>`).join('');
+    } else {
+      html += '<div class="empty-note" style="opacity:0.6">Nothing on tomorrow</div>';
     }
-
-    function clothingAdvice(temp, feelsLike, wmoCode, windMph) {
-      const t      = Math.round(feelsLike);
-      const isRain = wmoCode >= 51 && wmoCode <= 82;
-      const isSnow = wmoCode >= 71 && wmoCode <= 77;
-      const isStorm= wmoCode >= 95;
-      const windy  = windMph > 22;
-      const rain   = isRain ? ' and bring an <strong>umbrella</strong>' : '';
-      const wind   = windy  ? " It's quite <strong>breezy</strong> too." : '';
-
-      if (isStorm) return {
-        icon: '&#9928;',
-        text: '<strong>Stormy out there!</strong> Stay safe — if you must go out, full waterproofs and secure anything loose.'
-      };
-      if (isSnow) return {
-        icon: '&#9924;',
-        text: '<strong>Snow expected.</strong> Thick coat, <strong>waterproof boots</strong>, gloves, and a hat. Watch your step!'
-      };
-      if (t <= 0) return {
-        icon: '&#129398;',
-        text: '<strong>Freezing!</strong> Heavy winter coat, thermal base layers, gloves, scarf and hat are essential today.'
-      };
-      if (t <= 5) return {
-        icon: '&#129509;',
-        text: `<strong>Very cold.</strong> Thick coat, scarf and gloves. Layer up underneath${rain}.${wind}`
-      };
-      if (t <= 10) return {
-        icon: '&#129509;',
-        text: `<strong>Cold day.</strong> You'll need a proper coat${rain}.${wind}`
-      };
-      if (t <= 15) return {
-        icon: '&#128085;',
-        text: `<strong>Jacket weather.</strong> A mid-layer or warm jacket will do${rain}.${wind}`
-      };
-      if (t <= 19) return {
-        icon: '&#128085;',
-        text: `<strong>Mild.</strong> Light jacket or a cardigan should cover it${rain}.${wind}`
-      };
-      if (t <= 23) return {
-        icon: '&#128513;',
-        text: `<strong>Nice and warm!</strong> T-shirt weather — maybe a light layer in your bag${isRain ? rain : ''}.${wind}`
-      };
-      return {
-        icon: '&#9728;',
-        text: '<strong>Hot one today!</strong> Light clothes, sun cream, and stay <strong>hydrated</strong>.'
-      };
+    wrap.innerHTML = html;
+  } catch(err) {
+    if (err.message==='proxy_not_configured'||err.message==='not_ical') {
+      wrap.innerHTML = `<div class="cal-setup">
+        <strong>One-time nginx setup:</strong><br><br>
+        <code>location /cal {</code><br>
+        <code>&nbsp;&nbsp;proxy_pass YOUR_ICAL_URL;</code><br>
+        <code>&nbsp;&nbsp;proxy_ssl_server_name on;</code><br>
+        <code>}</code><br><br>
+        See <strong>nginx-calendar-setup.txt</strong> for full instructions.
+      </div>`;
+    } else {
+      wrap.innerHTML = `<div class="quip-wrap">
+        <div class="quip-main">Calendar not connected.</div>
+        <div class="quip-sub">See nginx-calendar-setup.txt</div>
+      </div>`;
     }
+  }
+}
+fetchCalendar(); setInterval(fetchCalendar, 15*60*1000);
 
-    async function fetchWeather() {
-      const wrap = document.getElementById('weather-wrap');
-      try {
-        const res  = await fetch(WEATHER_URL);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const c    = data.current;
-        const wmo  = wmoInterpret(c.weathercode);
-        const kit  = clothingAdvice(c.temperature_2m, c.apparent_temperature, c.weathercode, c.windspeed_10m);
+// ═══════════════════════════════════════════════════════════
+//  MUSIC TICKER
+// ═══════════════════════════════════════════════════════════
+let _tickerItems = [];
+let _tickerPos   = 0;
+let _tickerWidth = 0;
 
-        wrap.innerHTML = `
-          <div class="weather-main">
-            <div class="weather-icon">${wmo.icon}</div>
-            <div>
-              <div class="weather-temp">${Math.round(c.temperature_2m)}&deg;C</div>
-              <div class="weather-desc">${wmo.label}</div>
-            </div>
-          </div>
-          <div class="weather-meta">
-            <span>Feels like <strong>${Math.round(c.apparent_temperature)}&deg;C</strong></span>
-            <span>Humidity <strong>${c.relative_humidity_2m}%</strong></span>
-            <span>Wind <strong>${Math.round(c.windspeed_10m)} mph</strong></span>
-          </div>
-          <div id="clothing-advice">
-            <div id="clothing-icon">${kit.icon}</div>
-            <div id="clothing-text">${kit.text}</div>
-          </div>
-          <div style="font-size:0.7rem;color:var(--border);margin-top:0.6rem;text-align:right;">
-            Updated ${new Date().toLocaleTimeString('en-GB')} &bull; Open-Meteo
-          </div>`;
-      } catch (err) {
-        wrap.innerHTML = `<span class="error">&#9888; Weather unavailable (${err.message})</span>`;
-      }
+async function fetchMusic() {
+  try {
+    const items = await parseRSSviaProxy('https://www.nme.com/feed');
+    _tickerItems = items.map(i => i.title.replace(/ - NME.*$/,'').trim()).filter(Boolean);
+    buildTicker();
+  } catch {
+    try {
+      const items = await parseRSS('https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml');
+      _tickerItems = items.map(i => i.title.replace(/ - BBC.*/,'').trim()).filter(Boolean);
+      buildTicker();
+    } catch {
+      _tickerItems = ['Music news unavailable — try again later'];
+      buildTicker();
     }
-    fetchWeather();
-    setInterval(fetchWeather, 10 * 60 * 1000);
+  }
+}
 
-    // ═══════════════════════════════════════════════════
-    //  NEWS  — direct BBC RSS parse (no third-party proxy)
-    // ═══════════════════════════════════════════════════
-    async function parseRSS(url, count) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const txt = await res.text();
-      const xml = new DOMParser().parseFromString(txt, 'text/xml');
-      return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
-        title: el.querySelector('title')?.textContent?.trim() || '',
-        link:  el.querySelector('link')?.nextSibling?.nodeValue?.trim() ||
-               el.querySelector('guid')?.textContent?.trim() || '#'
-      }));
-    }
+function buildTicker() {
+  const el = document.getElementById('ticker-content');
+  if (!_tickerItems.length) return;
+  const html = _tickerItems.map(t =>
+    `<span>${t}</span><span class="t-sep">&#9834;</span>`
+  ).join('');
+  el.innerHTML = html + html; // doubled for seamless loop
+  el.style.transform = 'translateX(0)';
+  _tickerPos = 0;
+  _tickerWidth = el.scrollWidth / 2;
+}
 
-    function renderNewsItems(items) {
-      return items.map((item, i) => `
-        <a class="news-item" href="${item.link}" target="_blank" rel="noopener">
-          <span class="news-num">${i + 1}</span>
-          <span class="news-headline">${item.title}</span>
-        </a>`).join('');
-    }
+function animateTicker() {
+  const el = document.getElementById('ticker-content');
+  if (!el || _tickerWidth === 0) { requestAnimationFrame(animateTicker); return; }
+  _tickerPos += 0.6;
+  if (_tickerPos >= _tickerWidth) _tickerPos = 0;
+  el.style.transform = `translateX(-${_tickerPos}px)`;
+  requestAnimationFrame(animateTicker);
+}
 
-    async function fetchBrumNews() {
-      const wrap = document.getElementById('news-brum-wrap');
-      try {
-        const items = await parseRSS('https://feeds.bbci.co.uk/news/england/west_midlands/rss.xml', 5);
-        wrap.innerHTML = renderNewsItems(items);
-      } catch(err) {
-        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
-      }
-    }
-
-    async function fetchBCFC() {
-      const wrap = document.getElementById('news-bcfc-wrap');
-      try {
-        const items = await parseRSS('https://feeds.bbci.co.uk/sport/football/teams/birmingham-city/rss.xml', 4);
-        wrap.innerHTML = renderNewsItems(items);
-      } catch(err) {
-        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
-      }
-    }
-
-    fetchBrumNews();
-    fetchBCFC();
-    setInterval(fetchBrumNews, 30 * 60 * 1000);
-    setInterval(fetchBCFC,     30 * 60 * 1000);
-
-    // ═══════════════════════════════════════════════════
-    //  UK & WORLD NEWS — BBC Top Stories
-    // ═══════════════════════════════════════════════════
-    async function fetchUKNews() {
-      const wrap = document.getElementById('news-uk-wrap');
-      try {
-        const items = await parseRSS('https://feeds.bbci.co.uk/news/uk/rss.xml', 6);
-        wrap.innerHTML = renderNewsItems(items);
-      } catch(err) {
-        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
-      }
-    }
-    fetchUKNews();
-    setInterval(fetchUKNews, 30 * 60 * 1000);
-
-    // ═══════════════════════════════════════════════════
-    //  MUSIC NEWS — NME + BBC Music via CORS proxy
-    // ═══════════════════════════════════════════════════
-    const CORS = 'https://api.allorigins.win/raw?url=';
-
-    async function parseRSSviaCORS(url, count) {
-      const res = await fetch(CORS + encodeURIComponent(url));
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const txt = await res.text();
-      const xml = new DOMParser().parseFromString(txt, 'text/xml');
-      return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
-        title: el.querySelector('title')?.textContent?.trim() || '',
-        link:  el.querySelector('link')?.nextSibling?.nodeValue?.trim() ||
-               el.querySelector('guid')?.textContent?.trim() || '#'
-      }));
-    }
-
-    async function fetchNME() {
-      const wrap = document.getElementById('news-nme-wrap');
-      try {
-        const items = await parseRSSviaCORS('https://www.nme.com/feed', 4);
-        wrap.innerHTML = renderNewsItems(items);
-      } catch(err) {
-        wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
-      }
-    }
-
-    async function fetchBBCMusic() {
-      const wrap = document.getElementById('news-bbcmusic-wrap');
-      try {
-        const items = await parseRSS('https://feeds.bbci.co.uk/music/rss.xml', 4);
-        wrap.innerHTML = renderNewsItems(items);
-      } catch {
-        try {
-          const items2 = await parseRSSviaCORS('https://pitchfork.com/rss/news/feed.xml', 4);
-          wrap.innerHTML = renderNewsItems(items2);
-        } catch(err) {
-          wrap.innerHTML = `<span class="error">&#9888; ${err.message}</span>`;
-        }
-      }
-    }
-
-    fetchNME();
-    fetchBBCMusic();
-    setInterval(fetchNME,      30 * 60 * 1000);
-    setInterval(fetchBBCMusic, 30 * 60 * 1000);
-
-    // ═══════════════════════════════════════════════════
-    //  TRANSPORT — live trains via Huxley2, buses static
-    // ═══════════════════════════════════════════════════
-    async function fetchTrains() {
-      const wrap = document.getElementById('transport-wrap');
-      try {
-        const res = await fetch('https://huxley2.azurewebsites.net/departures/KGN/6');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const svcs = data.trainServices || [];
-
-        const trainRows = svcs.length ? svcs.slice(0, 5).map(s => {
-          const dest = s.destination?.[0]?.locationName || 'Unknown';
-          const etd  = s.etd === 'On time'  ? '<span class="on-time">On time</span>'
-                     : s.etd === 'Cancelled' ? '<span class="cancelled">Cancelled</span>'
-                     : `<span class="delayed">${s.etd}</span>`;
-          const plat = s.platform ? `<span class="dep-plat">Plat ${s.platform}</span>` : '';
-          return `<div class="dep-row">
-            <span class="dep-time">${s.std}</span>
-            <span class="dep-dest">${dest}</span>
-            ${etd}${plat}
-          </div>`;
-        }).join('') : '<div class="dep-empty">No services currently scheduled</div>';
-
-        wrap.innerHTML = `
-          <div class="dep-section">
-            <div class="dep-label">&#128644; Kings Norton — next departures</div>
-            ${trainRows}
-          </div>
-          <div class="dep-section">
-            <div class="dep-label">&#128652; Buses from Kings Norton</div>
-            <div class="dep-bus-row">
-              <span class="transport-badge badge-bus">45</span>
-              <span>Redditch &harr; Birmingham &mdash; approx every 10&ndash;12 mins</span>
-            </div>
-            <div class="dep-bus-row">
-              <span class="transport-badge badge-bus">49</span>
-              <span>Solihull &harr; Birmingham &mdash; approx every 10&ndash;12 mins</span>
-            </div>
-          </div>
-          <div style="font-size:0.7rem;color:var(--border);text-align:right;margin-top:0.25rem;">
-            Trains updated ${new Date().toLocaleTimeString('en-GB')} &bull; National Rail
-          </div>`;
-      } catch(err) {
-        wrap.innerHTML = `<span class="error">&#9888; Transport data unavailable (${err.message})</span>`;
-      }
-    }
-
-    fetchTrains();
-    setInterval(fetchTrains, 60 * 1000);
-
-    // ═══════════════════════════════════════════════════
-    //  SCHOOL CALENDAR  — fetches /cal (nginx proxy)
-    // ═══════════════════════════════════════════════════
-    function icalUnfold(t) { return t.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,''); }
-
-    function icalDate(str) {
-      if (!str) return null;
-      const s = str.replace(/[TZ:\-]/g,'');
-      const y=+s.slice(0,4), m=+s.slice(4,6)-1, d=+s.slice(6,8);
-      return isNaN(y) ? null : new Date(y,m,d);
-    }
-
-    function parseICal(raw) {
-      const lines = icalUnfold(raw).split(/\r?\n/);
-      const events = []; let e = null;
-      for (const line of lines) {
-        if (line==='BEGIN:VEVENT') { e={}; continue; }
-        if (line==='END:VEVENT')   { if(e) events.push(e); e=null; continue; }
-        if (!e) continue;
-        const ci = line.indexOf(':'); if (ci<0) continue;
-        const prop = line.slice(0,ci), val = line.slice(ci+1);
-        const base = prop.split(';')[0].toUpperCase();
-        if (base==='DTSTART') {
-          e.DTSTART=val;
-          e.ALLDAY = prop.toUpperCase().includes('VALUE=DATE') || /^\d{8}$/.test(val);
-        } else if (base==='EXDATE') {
-          e.EXDATES = (e.EXDATES||[]).concat(val.split(',').map(v=>icalDate(v.trim())));
-        } else { e[base]=val; }
-      }
-      return events;
-    }
-
-    const DOW = {SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
-
-    function occursOn(e, t) {
-      if (!e.DTSTART) return false;
-      const start = icalDate(e.DTSTART);
-      if (!start) return false;
-      const day = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-      if (e.EXDATES?.some(d=>d&&d.toDateString()===day.toDateString())) return false;
-      if (!e.RRULE) return start.toDateString()===day.toDateString();
-      if (start>day) return false;
-      const rule = Object.fromEntries(e.RRULE.split(';').map(p=>p.split('=')));
-      if (rule.UNTIL && icalDate(rule.UNTIL) < day) return false;
-      const iv = parseInt(rule.INTERVAL||'1');
-      if (rule.FREQ==='DAILY') {
-        return Math.round((day-start)/86400000)%iv===0;
-      }
-      if (rule.FREQ==='WEEKLY') {
-        const days = rule.BYDAY?.split(',').map(d=>d.replace(/[+\-\d]/g,''))||null;
-        if (days && !days.some(d=>DOW[d]===day.getDay())) return false;
-        if (!days && start.getDay()!==day.getDay()) return false;
-        const s0=new Date(start); s0.setDate(s0.getDate()-s0.getDay());
-        const t0=new Date(day);   t0.setDate(t0.getDate()-t0.getDay());
-        return Math.round((t0-s0)/(7*86400000))%iv===0;
-      }
-      if (rule.FREQ==='MONTHLY') return start.getDate()===day.getDate();
-      if (rule.FREQ==='YEARLY')  return start.getMonth()===day.getMonth()&&start.getDate()===day.getDate();
-      return false;
-    }
-
-    function calReminder(summary) {
-      const s=(summary||'').toLowerCase();
-      if (/\bpe\b|p\.e\.|gym|sport/.test(s))        return {msg:"Don't forget PE kit!",     urgent:true,  icon:'&#128759;'};
-      if (/swim/.test(s))                             return {msg:"Pack swimming kit + towel!",urgent:true,  icon:'&#127946;'};
-      if (/trip|excursion|visit/.test(s))             return {msg:"Permission slip & packed lunch!",urgent:true,icon:'&#127759;'};
-      if (/non.?uniform|mufti|own clothes/.test(s))  return {msg:"Wear own clothes today!",  urgent:false, icon:'&#128083;'};
-      if (/parents.?evening|consultation/.test(s))   return {msg:"Parents' evening tonight!",urgent:true,  icon:'&#128203;'};
-      if (/concert|perform|show|production/.test(s)) return {msg:"Performance today!",       urgent:false, icon:'&#127917;'};
-      if (/packed lunch/.test(s))                    return {msg:"Packed lunch needed!",     urgent:true,  icon:'&#127857;'};
-      if (/money|dinner/.test(s))                    return {msg:"Remember dinner money!",   urgent:false, icon:'&#128181;'};
-      return null;
-    }
-
-    function renderCalEvents(events, date, cssClass) {
-      const today = events.filter(e=>e.ALLDAY && occursOn(e,date));
-      if (!today.length) return cssClass ? '' :
-        '<div class="cal-empty">&#10003; Nothing on today — clear day!</div>';
-      return today.map(e=>{
-        const r = calReminder(e.SUMMARY||'');
-        const urgent = r?.urgent ? ' urgent' : '';
-        return `<div class="cal-event${urgent}${cssClass?' '+cssClass:''}">
-          <div class="cal-event-title">&#128197; ${e.SUMMARY||'(no title)'}</div>
-          ${r?`<div class="cal-reminder${r.urgent?' urgent':''}">${r.icon} ${r.msg}</div>`:''}
-        </div>`;
-      }).join('');
-    }
-
-    async function fetchCalendar() {
-      const wrap = document.getElementById('cal-wrap');
-      try {
-        const res = await fetch('/cal');
-        if (res.status===404) throw new Error('proxy_not_configured');
-        if (!res.ok) throw new Error('HTTP '+res.status);
-        const text = await res.text();
-        if (!text.includes('BEGIN:VCALENDAR')) throw new Error('not_ical');
-        const events = parseICal(text);
-        const today    = new Date();
-        const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
-        wrap.innerHTML =
-          '<div class="cal-section"><div class="cal-label">Today</div>'
-          + renderCalEvents(events,today,'') + '</div>'
-          + '<div class="cal-section"><div class="cal-label">Tomorrow &mdash; heads up</div>'
-          + (renderCalEvents(events,tomorrow,'tomorrow')||'<div class="cal-empty" style="opacity:.6">Nothing on tomorrow</div>')
-          + '</div>';
-      } catch(err) {
-        if (err.message==='proxy_not_configured'||err.message==='not_ical') {
-          wrap.innerHTML = `<div class="cal-setup">
-            <strong>One-time nginx setup needed.</strong><br>
-            Add this to your nginx server block, then reload nginx:<br><br>
-            <code>location /cal {</code><br>
-            <code>&nbsp;&nbsp;proxy_pass YOUR_GOOGLE_ICAL_URL;</code><br>
-            <code>&nbsp;&nbsp;proxy_ssl_server_name on;</code><br>
-            <code>}</code><br><br>
-            See <strong>nginx-calendar-setup.txt</strong> in the repo for full instructions.
-          </div>`;
-        } else {
-          wrap.innerHTML = `<span class="error">&#9888; Calendar unavailable (${err.message})</span>`;
-        }
-      }
-    }
-    fetchCalendar();
-    setInterval(fetchCalendar, 15*60*1000);
-
-    // ═══════════════════════════════════════════════════
-    //  FOOTER
-    // ═══════════════════════════════════════════════════
-    document.getElementById('footer-host').textContent = location.host || 'localhost:8080';
-  </script>
+fetchMusic(); setInterval(fetchMusic, 30*60*1000);
+requestAnimationFrame(animateTicker);
+</script>
 </body>
 </html>
