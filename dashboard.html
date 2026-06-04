@@ -4,58 +4,77 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kings Norton Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0d1117;
-      --surface:  #161b22;
-      --surface2: #1c2128;
-      --border:   #30363d;
-      --accent:   #58a6ff;
-      --green:    #3fb950;
-      --yellow:   #d29922;
-      --red:      #f85149;
-      --purple:   #bc8cff;
-      --orange:   #e3b341;
-      --pink:     #f778ba;
-      --muted:    #8b949e;
-      --text:     #e6edf3;
-      --sky:      #79c0ff;
-      --chartreuse: #7ee787;
+      --bg-1:     #080b14;
+      --bg-2:     #0d1322;
+      --surface:  rgba(23, 29, 47, 0.72);
+      --surface2: rgba(33, 41, 64, 0.55);
+      --border:   rgba(255, 255, 255, 0.08);
+      --border-2: rgba(255, 255, 255, 0.14);
+      --accent:   #5eb3ff;   /* sky blue */
+      --gold:     #ffc857;   /* warm amber — the clock */
+      --green:    #4ade80;
+      --yellow:   #fbbf24;
+      --red:      #f87171;
+      --purple:   #c084fc;
+      --orange:   #ffb454;
+      --pink:     #f472b6;
+      --muted:    #8b93a7;
+      --text:     #e8edf7;
+      --sky:      #7cc4ff;
+      --chartreuse: #86efac;
+      --blues:    #2b6fd4;   /* Birmingham City blue */
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, -apple-system, sans-serif;
     }
 
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
+      font-family: var(--font-body);
+      background:
+        radial-gradient(1200px 600px at 12% -8%, rgba(94, 179, 255, 0.10), transparent 60%),
+        radial-gradient(1000px 700px at 105% 10%, rgba(192, 132, 252, 0.08), transparent 55%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255, 200, 87, 0.06), transparent 60%),
+        linear-gradient(170deg, var(--bg-2) 0%, var(--bg-1) 100%);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
-      padding: 1rem;
+      padding: 1.1rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
       padding-bottom: 4rem; /* room for ticker */
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── HEADER ────────────────────────────────────────── */
     header {
       background: var(--surface);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem 2rem;
+      border-radius: 20px;
+      padding: 1.6rem 2rem;
       position: relative;
       overflow: hidden;
       display: grid;
       grid-template-columns: 1fr 1.6fr 1fr;
       gap: 1.5rem;
       align-items: center;
+      box-shadow: 0 18px 50px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
     }
     header::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--accent), var(--purple), var(--orange), var(--green));
+      background: linear-gradient(90deg, var(--accent), var(--purple), var(--gold), var(--green));
+      opacity: 0.9;
     }
 
     .header-left  { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -63,25 +82,41 @@
 
     #clock {
       text-align: center;
+      font-family: var(--font-display);
       font-size: clamp(3rem, 9vw, 6rem);
-      font-weight: 200;
-      letter-spacing: 0.04em;
-      color: var(--orange);
+      font-weight: 500;
+      letter-spacing: 0.01em;
       line-height: 1;
       font-variant-numeric: tabular-nums;
+      background: linear-gradient(180deg, #ffe2a3 0%, var(--gold) 55%, #f0a93c 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 18px rgba(255, 200, 87, 0.25));
+    }
+    .clock-ampm {
+      font-size: 0.32em;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      margin-left: 0.35em;
+      vertical-align: 0.45em;
+      -webkit-text-fill-color: var(--muted);
+      filter: none;
     }
     #greeting {
       text-align: center;
       font-size: 0.9rem;
       color: var(--muted);
-      margin-top: 0.4rem;
+      margin-top: 0.5rem;
+      font-weight: 500;
     }
 
     #date-display {
-      font-size: 1.1rem;
-      font-weight: 700;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 600;
       color: var(--sky);
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
     }
     #moon-display {
@@ -90,11 +125,15 @@
     }
 
     .location-tag {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.1em;
+      color: var(--gold);
+      letter-spacing: 0.14em;
       text-transform: uppercase;
+      padding: 0.28rem 0.7rem;
+      border: 1px solid rgba(255, 200, 87, 0.25);
+      border-radius: 999px;
+      background: rgba(255, 200, 87, 0.07);
     }
     #wisdom {
       font-size: 0.78rem;
@@ -193,38 +232,54 @@
     /* ── CARD BASE ─────────────────────────────────────── */
     .card {
       background: var(--surface);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
+      border-radius: 16px;
+      padding: 1.2rem 1.35rem;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.8rem;
+      box-shadow: 0 16px 40px -24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+      transition: transform 0.2s ease, border-color 0.2s ease;
     }
+    .card:hover { border-color: var(--border-2); transform: translateY(-2px); }
     .card-title {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--muted);
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.55rem;
     }
-    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .card-title .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+    .card-title .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+      box-shadow: 0 0 10px currentColor;
+    }
 
     /* ── WEATHER ───────────────────────────────────────── */
     .wx-current { display: flex; align-items: center; gap: 1rem; }
-    .wx-icon { font-size: 2.8rem; line-height: 1; }
-    .wx-temp { font-size: 2.6rem; font-weight: 200; color: var(--orange); line-height: 1; }
+    .wx-icon { font-size: 2.9rem; line-height: 1; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+    .wx-temp {
+      font-family: var(--font-display);
+      font-size: 2.7rem; font-weight: 500; line-height: 1;
+      background: linear-gradient(180deg, #ffe2a3, var(--gold));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
     .wx-desc { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
     .wx-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
     .wx-meta span { font-size: 0.78rem; color: var(--muted); }
-    .wx-meta strong { color: var(--text); }
+    .wx-meta strong { color: var(--text); font-weight: 600; }
     .wx-quip {
       font-size: 0.82rem; color: var(--text); font-style: italic;
-      padding: 0.6rem 0.9rem; background: var(--surface2);
-      border-radius: 7px; border-left: 3px solid var(--orange);
+      padding: 0.7rem 0.95rem; background: var(--surface2);
+      border-radius: 10px; border-left: 3px solid var(--gold);
+      line-height: 1.5;
     }
     .wx-tomorrow { margin-top: 0.25rem; }
     .wx-tmr-label {
@@ -244,10 +299,13 @@
     /* ── TRAINS ────────────────────────────────────────── */
     .dep-row {
       display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.5rem 0.7rem; background: var(--surface2);
-      border-radius: 7px; font-size: 0.85rem;
+      padding: 0.6rem 0.8rem; background: var(--surface2);
+      border: 1px solid transparent;
+      border-radius: 10px; font-size: 0.85rem;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .dep-time { font-weight: 700; min-width: 3rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+    .dep-row:hover { border-color: rgba(94,179,255,0.25); background: rgba(94,179,255,0.06); }
+    .dep-time { font-family: var(--font-display); font-weight: 600; min-width: 3rem; font-variant-numeric: tabular-nums; color: var(--accent); }
     .dep-dest { flex: 1; }
     .dep-plat { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
     .dep-status-ok  { color: var(--green);  font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
@@ -257,16 +315,19 @@
     /* ── BUSES ─────────────────────────────────────────── */
     .bus-row {
       display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.5rem 0.7rem; background: var(--surface2);
-      border-radius: 7px; font-size: 0.83rem;
+      padding: 0.6rem 0.8rem; background: var(--surface2);
+      border: 1px solid transparent;
+      border-radius: 10px; font-size: 0.83rem;
+      transition: border-color 0.15s, background 0.15s;
     }
+    .bus-row:hover { border-color: rgba(192,132,252,0.25); background: rgba(192,132,252,0.06); }
     .bus-badge {
-      font-size: 0.72rem; font-weight: 800; padding: 0.18rem 0.5rem;
-      border-radius: 5px; min-width: 2.4rem; text-align: center; flex-shrink: 0;
-      background: rgba(188,140,255,0.15); color: var(--purple);
-      border: 1px solid rgba(188,140,255,0.3);
+      font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.55rem;
+      border-radius: 7px; min-width: 2.4rem; text-align: center; flex-shrink: 0;
+      background: rgba(192,132,252,0.16); color: var(--purple);
+      border: 1px solid rgba(192,132,252,0.35);
     }
-    .bus-time { font-weight: 700; color: var(--text); min-width: 3rem; font-variant-numeric: tabular-nums; }
+    .bus-time { font-family: var(--font-display); font-weight: 600; color: var(--text); min-width: 3rem; font-variant-numeric: tabular-nums; }
     .bus-dest { flex: 1; color: var(--muted); }
     .bus-approx { font-size: 0.72rem; color: var(--muted); }
 
@@ -280,15 +341,19 @@
     }
     .news-item:last-child { border-bottom: none; padding-bottom: 0; }
     .news-item:hover { color: var(--accent); }
-    .news-num { font-size: 0.68rem; font-weight: 700; color: var(--muted); padding-top: 0.1rem; min-width: 1rem; }
-    .news-headline { font-size: 0.85rem; line-height: 1.4; }
-    .news-time { font-size: 0.7rem; color: var(--muted); margin-top: 0.1rem; }
+    .news-num {
+      font-family: var(--font-display);
+      font-size: 0.7rem; font-weight: 600; color: var(--accent);
+      padding-top: 0.1rem; min-width: 1.1rem;
+    }
+    .news-headline { font-size: 0.86rem; line-height: 1.45; font-weight: 500; }
+    .news-time { font-size: 0.7rem; color: var(--muted); margin-top: 0.12rem; }
 
     /* ── CALENDAR ──────────────────────────────────────── */
     .cal-event {
-      padding: 0.55rem 0.85rem; background: var(--surface2);
-      border-radius: 7px; border-left: 3px solid var(--orange);
-      margin-bottom: 0.4rem;
+      padding: 0.6rem 0.9rem; background: var(--surface2);
+      border-radius: 10px; border-left: 3px solid var(--gold);
+      margin-bottom: 0.45rem;
     }
     .cal-event-time { font-size: 0.72rem; color: var(--muted); }
     .cal-event-title { font-size: 0.88rem; font-weight: 500; margin-top: 0.1rem; }
@@ -298,7 +363,7 @@
       line-height: 1.65; border: 1px dashed var(--border);
     }
     .cal-setup code {
-      background: var(--bg); padding: 0.1rem 0.35rem;
+      background: var(--bg-1); padding: 0.1rem 0.35rem;
       border-radius: 3px; color: var(--accent); font-size: 0.75rem;
     }
 
@@ -306,23 +371,29 @@
     #ticker-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 2.6rem;
-      background: #0d0d17;
-      border-top: 1px solid rgba(247,120,186,0.3);
+      height: 2.7rem;
+      background: rgba(10, 12, 22, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(244,114,182,0.28);
+      box-shadow: 0 -8px 30px -10px rgba(244,114,182,0.18);
       overflow: hidden;
       display: flex;
       align-items: center;
+      z-index: 50;
     }
     #ticker-label {
       flex-shrink: 0;
-      padding: 0 0.9rem;
+      padding: 0 1rem;
+      font-family: var(--font-display);
       font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
+      font-weight: 700;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--pink);
-      border-right: 1px solid rgba(247,120,186,0.3);
+      border-right: 1px solid rgba(244,114,182,0.28);
       white-space: nowrap;
+      text-shadow: 0 0 12px rgba(244,114,182,0.5);
     }
     #ticker-track { flex: 1; overflow: hidden; position: relative; height: 100%; }
     #ticker-content {
@@ -352,9 +423,10 @@
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
     /* ── MISC ──────────────────────────────────────────── */
-    .updated-note { font-size: 0.67rem; color: var(--border); text-align: right; margin-top: 0.3rem; }
+    .updated-note { font-size: 0.67rem; color: var(--muted); opacity: 0.5; text-align: right; margin-top: 0.3rem; }
     .section-label {
-      font-size: 0.67rem; font-weight: 700; letter-spacing: 0.1em;
+      font-family: var(--font-display);
+      font-size: 0.67rem; font-weight: 600; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem;
       margin-top: 0.6rem;
     }
@@ -451,7 +523,10 @@ function greeting(h) {
 
 function tick() {
   const n = new Date(), h = n.getHours();
-  document.getElementById('clock').textContent = `${pad(h)}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  const ampm = h >= 12 ? 'pm' : 'am';
+  const h12  = h % 12 || 12;
+  document.getElementById('clock').innerHTML =
+    `${h12}:${pad(n.getMinutes())}:${pad(n.getSeconds())}<span class="clock-ampm">${ampm}</span>`;
   document.getElementById('date-display').textContent =
     `${DAYS[n.getDay()].toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].toUpperCase()} ${n.getFullYear()}`;
   document.getElementById('greeting').textContent = greeting(h);
@@ -609,7 +684,6 @@ async function fetchWeather() {
         <span>Wind <strong>${Math.round(cur.windspeed_10m)} mph</strong></span>
       </div>
       <div class="wx-quip">${clothingAdvice(cur.apparent_temperature, cur.weathercode)}</div>
-      <div class="wx-quip" style="border-color:var(--muted);color:var(--muted);font-style:normal">${wxQuip(cur.weathercode)}</div>
       <div class="wx-tomorrow">
         <div class="section-label">Tomorrow — Hi ${tmrMax}° Lo ${tmrMin}°</div>
         <div class="wx-hourly">${renderTomorrowHours(d.hourly.time, d.hourly.temperature_2m, d.hourly.weathercode, d.hourly.precipitation_probability)}</div>
@@ -714,7 +788,7 @@ function renderBuses() {
   }
 
   allDeps.sort((a, b) => a.time - b.time);
-  const next = allDeps.slice(0, 8);
+  const next = allDeps.slice(0, 6);
 
   if (!next.length) {
     wrap.innerHTML = `<div class="quip-wrap">
