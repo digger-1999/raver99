@@ -432,112 +432,119 @@ function nextWisdom() {
 nextWisdom(); setInterval(nextWisdom, 30000);
 
 // ═══════════════════════════════════════════════════════════
-//  WEATHER — wttr.in (no API key, CORS enabled)
+//  WEATHER — Open-Meteo (free, no key, confirmed CORS)
 // ═══════════════════════════════════════════════════════════
-const WEATHER_QUIPS = {
-  113: ["Genuinely nice out. Don't waste it.", "Sun's out. Birmingham looks almost attractive."],
-  default: ["Classic Brummie sky.", "Could be worse. Could be raining."],
-  rain: ["Classic.", "It's grim up the Midlands.", "Wet. Very wet."],
+const WX_URL = 'https://api.open-meteo.com/v1/forecast'
+  + '?latitude=52.4862&longitude=-1.8904'
+  + '&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,relative_humidity_2m'
+  + '&daily=weathercode,temperature_2m_max,temperature_2m_min'
+  + '&hourly=temperature_2m,precipitation_probability,weathercode'
+  + '&wind_speed_unit=mph&timezone=Europe%2FLondon&forecast_days=2';
+
+const WX_QUIPS = {
+  clear: ["Genuinely nice out. Don't waste it.", "Sun's out. Birmingham looks almost attractive."],
+  cloud: ["Classic Brummie sky.", "Could be worse. Could be raining."],
+  rain:  ["Classic.", "It's grim up the Midlands.", "Wet. Very wet."],
   storm: ["Absolutely biblical out there.", "Stay in. Seriously."],
-  snow: ["Snow in Birmingham. Chaos incoming.", "One inch. City grinds to a halt."],
+  snow:  ["Snow in Birmingham. Chaos incoming.", "One inch. City grinds to a halt."],
 };
 
-function wttrIcon(code) {
+function wmoIcon(code) {
   const c = parseInt(code);
-  if (c === 113) return { i: '☀', label: 'Sunny' };
-  if (c === 116) return { i: '⛅', label: 'Partly cloudy' };
-  if (c === 119 || c === 122) return { i: '☁', label: 'Cloudy' };
-  if ([143,248,260].includes(c)) return { i: '🌫', label: 'Foggy' };
-  if ([176,263,266,293,296].includes(c)) return { i: '🌦', label: 'Light rain' };
-  if ([299,302,305,308].includes(c)) return { i: '🌧', label: 'Rain' };
-  if ([200,386,389,392,395].includes(c)) return { i: '⛈', label: 'Thunderstorm' };
-  if (c >= 179 && c <= 395) return { i: '🌨', label: 'Snow / sleet' };
+  if (c === 0)          return { i: '☀',  label: 'Clear sky' };
+  if (c <= 2)           return { i: '⛅',  label: 'Partly cloudy' };
+  if (c === 3)          return { i: '☁',  label: 'Overcast' };
+  if (c <= 49)          return { i: '🌫',  label: 'Foggy' };
+  if (c <= 55)          return { i: '🌦',  label: 'Drizzle' };
+  if (c <= 67)          return { i: '🌧',  label: 'Rain' };
+  if (c <= 77)          return { i: '🌨',  label: 'Snow' };
+  if (c <= 82)          return { i: '🌧',  label: 'Rain showers' };
+  if (c <= 86)          return { i: '🌨',  label: 'Snow showers' };
+  if (c === 95)         return { i: '⛈',  label: 'Thunderstorm' };
+  if (c <= 99)          return { i: '⛈',  label: 'Thunder & hail' };
   return { i: '🌤', label: 'Mixed' };
 }
 
-function clothingNarrative(tempC, feelsC, code) {
-  const t = parseInt(feelsC);
-  const isRain  = [176,263,266,293,296,299,302,305,308].includes(parseInt(code));
-  const isSnow  = parseInt(code) >= 179 && parseInt(code) <= 338;
-  const isStorm = [200,386,389,392,395].includes(parseInt(code));
-  const rain    = isRain ? ' Bring an umbrella.' : '';
-  if (isStorm) return 'Stormy out there — stay safe if you must go out.';
-  if (isSnow)  return 'Snow expected. Warm coat, waterproof boots, gloves.';
-  if (t <= 0)  return 'Freezing. Full winter kit — thermals, coat, gloves, scarf.';
-  if (t <= 5)  return `Very cold. Heavy coat, scarf and gloves essential.${rain}`;
-  if (t <= 10) return `Cold — you'll need a proper coat.${rain}`;
-  if (t <= 14) return `Jacket weather. A mid-layer will do.${rain}`;
-  if (t <= 18) return `Mild. Light jacket or cardigan.${rain}`;
-  if (t <= 22) return `Warm and pleasant. T-shirt weather.${rain}`;
+function wxQuip(code) {
+  const c = parseInt(code);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  if (c === 0)        return pick(WX_QUIPS.clear);
+  if (c >= 95)        return pick(WX_QUIPS.storm);
+  if (c >= 71 && c <= 77) return pick(WX_QUIPS.snow);
+  if (c >= 51 && c <= 82) return pick(WX_QUIPS.rain);
+  return pick(WX_QUIPS.cloud);
+}
+
+function clothingAdvice(feelsC, code) {
+  const t = Math.round(feelsC);
+  const c = parseInt(code);
+  const rain  = (c >= 51 && c <= 82) ? ' Bring an umbrella.' : '';
+  if (c >= 95)         return 'Stormy out there — stay safe if you must go out.';
+  if (c >= 71 && c <= 77) return 'Snow expected. Warm coat, waterproof boots, gloves.';
+  if (t <= 0)          return 'Freezing. Full winter kit — thermals, coat, gloves, scarf.';
+  if (t <= 5)          return `Very cold. Heavy coat, scarf and gloves essential.${rain}`;
+  if (t <= 10)         return `Cold — you'll need a proper coat.${rain}`;
+  if (t <= 14)         return `Jacket weather. A mid-layer will do.${rain}`;
+  if (t <= 18)         return `Mild. Light jacket or cardigan.${rain}`;
+  if (t <= 22)         return `Warm and pleasant. T-shirt weather.${rain}`;
   return 'Hot one! Light clothes, sun cream, stay hydrated.';
 }
 
-function getWeatherQuip(code) {
-  const c = parseInt(code);
-  if (c === 113) return WEATHER_QUIPS[113][Math.random() < 0.5 ? 0 : 1];
-  if ([200,386,389].includes(c)) return WEATHER_QUIPS.storm[0];
-  if (c >= 179 && c <= 338) return WEATHER_QUIPS.snow[Math.random() < 0.5 ? 0 : 1];
-  if ([176,263,266,293,296,299,302,305,308].includes(c))
-    return WEATHER_QUIPS.rain[Math.floor(Math.random()*3)];
-  return WEATHER_QUIPS.default[Math.random() < 0.5 ? 0 : 1];
-}
-
-function renderHourly(hourly) {
-  const now = new Date().getHours();
-  return hourly.filter(h => {
-    const hr = Math.floor(parseInt(h.time) / 100);
-    return hr >= now;
-  }).slice(0, 4).map(h => {
-    const hr   = Math.floor(parseInt(h.time) / 100);
-    const desc = h.weatherDesc[0].value;
-    const temp = h.tempC;
-    const rain = parseFloat(h.precipMM || 0);
-    const icon = wttrIcon(h.weatherCode);
-    return `<div class="wx-hour">
-      <span class="wx-hour-time">${pad(hr)}:00</span>
-      <span style="font-size:1rem">${icon.i}</span>
-      <span class="wx-hour-temp">${temp}°</span>
-      <span class="wx-hour-desc">${desc}</span>
-      ${rain > 0 ? `<span class="wx-hour-rain">${rain}mm</span>` : ''}
-    </div>`;
-  }).join('');
+function renderTomorrowHours(times, temps, codes, rainPct) {
+  const tmrDate = new Date(); tmrDate.setDate(tmrDate.getDate() + 1);
+  const tmrStr  = tmrDate.toISOString().slice(0, 10);
+  return times
+    .map((t, i) => ({ t, temp: Math.round(temps[i]), code: codes[i], rain: rainPct[i] }))
+    .filter(h => h.t.startsWith(tmrStr))
+    .filter((_, i) => i % 3 === 0)
+    .slice(0, 4)
+    .map(h => {
+      const icon = wmoIcon(h.code);
+      return `<div class="wx-hour">
+        <span class="wx-hour-time">${h.t.slice(11,16)}</span>
+        <span style="font-size:1rem">${icon.i}</span>
+        <span class="wx-hour-temp">${h.temp}°</span>
+        <span class="wx-hour-desc">${icon.label}</span>
+        ${h.rain > 20 ? `<span class="wx-hour-rain">${h.rain}%</span>` : ''}
+      </div>`;
+    }).join('');
 }
 
 async function fetchWeather() {
   const wrap = document.getElementById('weather-wrap');
   try {
-    const res  = await fetch('https://wttr.in/Kings+Norton,Birmingham?format=j1',
-                             { headers: { 'User-Agent': 'curl/7.68.0' } });
+    const res  = await fetch(WX_URL);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d    = await res.json();
-    const cur  = d.current_condition[0];
-    const icon = wttrIcon(cur.weatherCode);
-    const tmr  = d.weather[1];
+    const cur  = d.current;
+    const icon = wmoIcon(cur.weathercode);
+    const tmrMax = Math.round(d.daily.temperature_2m_max[1]);
+    const tmrMin = Math.round(d.daily.temperature_2m_min[1]);
 
     wrap.innerHTML = `
       <div class="wx-current">
         <div class="wx-icon">${icon.i}</div>
         <div>
-          <div class="wx-temp">${cur.temp_C}°C</div>
+          <div class="wx-temp">${Math.round(cur.temperature_2m)}°C</div>
           <div class="wx-desc">${icon.label}</div>
         </div>
       </div>
       <div class="wx-meta">
-        <span>Feels <strong>${cur.FeelsLikeC}°C</strong></span>
-        <span>Humidity <strong>${cur.humidity}%</strong></span>
-        <span>Wind <strong>${Math.round(parseInt(cur.windspeedKmph)*0.621)} mph</strong></span>
+        <span>Feels <strong>${Math.round(cur.apparent_temperature)}°C</strong></span>
+        <span>Humidity <strong>${cur.relative_humidity_2m}%</strong></span>
+        <span>Wind <strong>${Math.round(cur.windspeed_10m)} mph</strong></span>
       </div>
-      <div class="wx-quip">${clothingNarrative(cur.temp_C, cur.FeelsLikeC, cur.weatherCode)}</div>
-      <div class="wx-quip" style="border-color:var(--muted);color:var(--muted);font-style:normal">${getWeatherQuip(cur.weatherCode)}</div>
+      <div class="wx-quip">${clothingAdvice(cur.apparent_temperature, cur.weathercode)}</div>
+      <div class="wx-quip" style="border-color:var(--muted);color:var(--muted);font-style:normal">${wxQuip(cur.weathercode)}</div>
       <div class="wx-tomorrow">
-        <div class="section-label">Tomorrow — Hi ${tmr.maxtempC}° Lo ${tmr.mintempC}°</div>
-        <div class="wx-hourly">${renderHourly(tmr.hourly)}</div>
+        <div class="section-label">Tomorrow — Hi ${tmrMax}° Lo ${tmrMin}°</div>
+        <div class="wx-hourly">${renderTomorrowHours(d.hourly.time, d.hourly.temperature_2m, d.hourly.weathercode, d.hourly.precipitation_probability)}</div>
       </div>
-      <div class="updated-note">wttr.in · ${new Date().toLocaleTimeString('en-GB')}</div>`;
+      <div class="updated-note">Open-Meteo · ${new Date().toLocaleTimeString('en-GB')}</div>`;
   } catch (err) {
     wrap.innerHTML = `<div class="quip-wrap">
       <div class="quip-main">Try looking out the window.</div>
-      <div class="quip-sub">wttr.in unavailable (${err.message})</div>
+      <div class="quip-sub">Weather unavailable (${err.message})</div>
     </div>`;
   }
 }
@@ -654,35 +661,15 @@ function renderBuses() {
 renderBuses(); setInterval(renderBuses, 60*1000);
 
 // ═══════════════════════════════════════════════════════════
-//  RSS PARSING
+//  RSS via rss2json.com  (CORS-enabled JSON API, no key needed)
 // ═══════════════════════════════════════════════════════════
-async function parseRSS(url) {
+async function fetchRSS(rssUrl, count = 6) {
+  const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=${count}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  const txt = await res.text();
-  const xml = new DOMParser().parseFromString(txt, 'text/xml');
-  return [...xml.querySelectorAll('item')].slice(0, 6).map(el => {
-    const title = el.querySelector('title')?.textContent?.trim() || '';
-    const link  = el.querySelector('link')?.nextSibling?.nodeValue?.trim()
-               || el.querySelector('guid')?.textContent?.trim() || '#';
-    const pub   = el.querySelector('pubDate')?.textContent?.trim() || '';
-    return { title, link, pub };
-  }).filter(i => i.title && i.title !== '[Removed]');
-}
-
-const CORS_PROXY = 'https://corsproxy.io/?';
-
-async function parseRSSviaProxy(url) {
-  const res = await fetch(CORS_PROXY + encodeURIComponent(url));
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const txt = await res.text();
-  const xml = new DOMParser().parseFromString(txt, 'text/xml');
-  return [...xml.querySelectorAll('item')].slice(0, 15).map(el => {
-    const title = el.querySelector('title')?.textContent?.trim() || '';
-    const link  = el.querySelector('link')?.nextSibling?.nodeValue?.trim()
-               || el.querySelector('guid')?.textContent?.trim() || '#';
-    return { title, link };
-  }).filter(i => i.title);
+  const d = await res.json();
+  if (d.status !== 'ok') throw new Error(d.message || 'Feed error');
+  return d.items.filter(i => i.title && i.title !== '[Removed]');
 }
 
 function fmtPub(raw) {
@@ -690,19 +677,18 @@ function fmtPub(raw) {
   try {
     const d = new Date(raw);
     const today = new Date();
-    if (d.toDateString() === today.toDateString()) {
+    if (d.toDateString() === today.toDateString())
       return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    }
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   } catch { return ''; }
 }
 
-function renderNews(items, limit=4) {
+function renderNews(items, limit = 5) {
   return items.slice(0, limit).map((it, i) => {
-    const headline = it.title.replace(/ - BBC.*$/, '').trim();
-    const time     = fmtPub(it.pub);
+    const headline = it.title.replace(/ - BBC.*$/, '').replace(/ \| .*$/, '').trim();
+    const time     = fmtPub(it.pubDate);
     return `<a class="news-item" href="${it.link}" target="_blank" rel="noopener">
-      <span class="news-num">${i+1}</span>
+      <span class="news-num">${i + 1}</span>
       <span>
         <div class="news-headline">${headline}</div>
         ${time ? `<div class="news-time">${time}</div>` : ''}
@@ -718,34 +704,25 @@ function showErr(wrapId, quipMain, quipSub) {
   </div>`;
 }
 
-// Birmingham news
 async function fetchBrum() {
   try {
-    const items = await parseRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml');
-    document.getElementById('brum-wrap').innerHTML = renderNews(items, 5);
-  } catch (e) {
-    showErr('brum-wrap', 'No Brum news.', 'Either very good or very bad sign.');
-  }
+    const items = await fetchRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml');
+    document.getElementById('brum-wrap').innerHTML = renderNews(items);
+  } catch (e) { showErr('brum-wrap', 'No Brum news.', 'Either very good or very bad sign.'); }
 }
 
-// UK news
 async function fetchNews() {
   try {
-    const items = await parseRSS('https://feeds.bbci.co.uk/news/uk/rss.xml');
-    document.getElementById('news-wrap').innerHTML = renderNews(items, 5);
-  } catch (e) {
-    showErr('news-wrap', 'BBC gone quiet.', 'Probably a licence fee dispute.');
-  }
+    const items = await fetchRSS('https://feeds.bbci.co.uk/news/uk/rss.xml');
+    document.getElementById('news-wrap').innerHTML = renderNews(items);
+  } catch (e) { showErr('news-wrap', 'BBC gone quiet.', 'Probably a licence fee dispute.'); }
 }
 
-// Sport
 async function fetchSport() {
   try {
-    const items = await parseRSS('https://feeds.bbci.co.uk/sport/rss.xml');
+    const items = await fetchRSS('https://feeds.bbci.co.uk/sport/rss.xml');
     document.getElementById('sport-wrap').innerHTML = renderNews(items, 4);
-  } catch (e) {
-    showErr('sport-wrap', 'Sport taking a breather.', 'Must be a rest day.');
-  }
+  } catch (e) { showErr('sport-wrap', 'Sport taking a breather.', 'Must be a rest day.'); }
 }
 
 fetchBrum();  setInterval(fetchBrum,  30*60*1000);
@@ -863,16 +840,16 @@ let _tickerWidth = 0;
 
 async function fetchMusic() {
   try {
-    const items = await parseRSSviaProxy('https://www.nme.com/feed');
+    const items = await fetchRSS('https://www.nme.com/feed', 15);
     _tickerItems = items.map(i => i.title.replace(/ - NME.*$/,'').trim()).filter(Boolean);
     buildTicker();
   } catch {
     try {
-      const items = await parseRSS('https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml');
+      const items = await fetchRSS('https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', 10);
       _tickerItems = items.map(i => i.title.replace(/ - BBC.*/,'').trim()).filter(Boolean);
       buildTicker();
     } catch {
-      _tickerItems = ['Music news unavailable — try again later'];
+      _tickerItems = ['Music news unavailable — NME and BBC Entertainment both unreachable'];
       buildTicker();
     }
   }
