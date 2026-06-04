@@ -324,16 +324,23 @@
       border-right: 1px solid rgba(247,120,186,0.3);
       white-space: nowrap;
     }
-    #ticker-track { flex: 1; overflow: hidden; position: relative; }
+    #ticker-track { flex: 1; overflow: hidden; position: relative; height: 100%; }
     #ticker-content {
       position: absolute;
       white-space: nowrap;
       font-size: 0.82rem;
       color: var(--text);
       top: 50%;
-      transform: translateY(-50%);
+      left: 0;
+      will-change: transform;
+      transform: translate(0, -50%);
+      animation: ticker-scroll linear infinite;
     }
     #ticker-content .t-sep { color: var(--pink); margin: 0 0.7rem; }
+    @keyframes ticker-scroll {
+      from { transform: translate(0, -50%); }
+      to   { transform: translate(-50%, -50%); }
+    }
 
     /* ── LOADING / ERROR ───────────────────────────────── */
     .loading { color: var(--muted); font-size: 0.85rem; font-style: italic; animation: pulse 1.4s ease-in-out infinite; }
@@ -778,7 +785,7 @@ function fmtPub(raw) {
   } catch { return ''; }
 }
 
-function renderNews(items, limit = 5) {
+function renderNews(items, limit = 3) {
   return items.slice(0, limit).map((it, i) => {
     const headline = it.title.replace(/ - BBC.*$/, '').replace(/ \| .*$/, '').trim();
     const time     = fmtPub(it.pubDate);
@@ -816,7 +823,7 @@ async function fetchNews() {
 async function fetchSport() {
   try {
     const items = await fetchRSS('https://feeds.bbci.co.uk/sport/rss.xml');
-    document.getElementById('sport-wrap').innerHTML = renderNews(items, 4);
+    document.getElementById('sport-wrap').innerHTML = renderNews(items, 3);
   } catch (e) { showErr('sport-wrap', 'Sport taking a breather.', 'Must be a rest day.'); }
 }
 
@@ -927,52 +934,44 @@ async function fetchCalendar() {
 fetchCalendar(); setInterval(fetchCalendar, 15*60*1000);
 
 // ═══════════════════════════════════════════════════════════
-//  MUSIC TICKER
+//  MUSIC TICKER — CSS-animated marquee, multi-feed fallback
 // ═══════════════════════════════════════════════════════════
-let _tickerItems = [];
-let _tickerPos   = 0;
-let _tickerWidth = 0;
+const MUSIC_FEEDS = [
+  'https://www.nme.com/feed/',
+  'https://pitchfork.com/rss/news/',
+  'https://www.rollingstone.com/music/music-news/feed/',
+  'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
+];
 
 async function fetchMusic() {
-  try {
-    const items = await fetchRSS('https://www.nme.com/feed/', 15);
-    _tickerItems = items.map(i => i.title.replace(/ - NME.*$/i,'').trim()).filter(Boolean);
-    buildTicker();
-  } catch {
+  let items = null;
+  for (const feed of MUSIC_FEEDS) {
     try {
-      const items = await fetchRSS('https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', 10);
-      _tickerItems = items.map(i => i.title.replace(/ - BBC.*/,'').trim()).filter(Boolean);
-      buildTicker();
-    } catch {
-      _tickerItems = ['Music news unavailable — NME and BBC Entertainment both unreachable'];
-      buildTicker();
-    }
+      const got = await fetchRSS(feed, 15);
+      if (got && got.length) { items = got; break; }
+    } catch { /* try next feed */ }
   }
+  const titles = items
+    ? items.map(i => i.title.replace(/ - (NME|BBC).*$/i, '').trim()).filter(Boolean)
+    : ['Music news unavailable right now — will retry shortly'];
+  buildTicker(titles);
 }
 
-function buildTicker() {
+function buildTicker(titles) {
   const el = document.getElementById('ticker-content');
-  if (!_tickerItems.length) return;
-  const html = _tickerItems.map(t =>
+  if (!el || !titles.length) return;
+  const seq  = titles.map(t =>
     `<span>${t}</span><span class="t-sep">&#9834;</span>`
   ).join('');
-  el.innerHTML = html + html; // doubled for seamless loop
-  el.style.transform = 'translateX(0)';
-  _tickerPos = 0;
-  _tickerWidth = el.scrollWidth / 2;
-}
+  el.innerHTML = seq + seq; // doubled so -50% translate loops seamlessly
 
-function animateTicker() {
-  const el = document.getElementById('ticker-content');
-  if (!el || _tickerWidth === 0) { requestAnimationFrame(animateTicker); return; }
-  _tickerPos += 0.6;
-  if (_tickerPos >= _tickerWidth) _tickerPos = 0;
-  el.style.transform = `translateX(-${_tickerPos}px)`;
-  requestAnimationFrame(animateTicker);
+  // Duration scales with content length: ~50px per second
+  const oneWidth = el.scrollWidth / 2;
+  const duration = Math.max(20, Math.round(oneWidth / 50));
+  el.style.animationDuration = duration + 's';
 }
 
 fetchMusic(); setInterval(fetchMusic, 30*60*1000);
-requestAnimationFrame(animateTicker);
 </script>
 </body>
 </html>
