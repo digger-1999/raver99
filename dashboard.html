@@ -661,15 +661,21 @@ function renderBuses() {
 renderBuses(); setInterval(renderBuses, 60*1000);
 
 // ═══════════════════════════════════════════════════════════
-//  RSS via rss2json.com  (CORS-enabled JSON API, no key needed)
+//  RSS via allorigins.win CORS proxy — returns raw XML
 // ═══════════════════════════════════════════════════════════
 async function fetchRSS(rssUrl, count = 6) {
-  const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=${count}`;
+  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  const d = await res.json();
-  if (d.status !== 'ok') throw new Error(d.message || 'Feed error');
-  return d.items.filter(i => i.title && i.title !== '[Removed]');
+  const txt = await res.text();
+  const xml = new DOMParser().parseFromString(txt, 'text/xml');
+  if (xml.querySelector('parsererror')) throw new Error('XML parse error');
+  return [...xml.querySelectorAll('item')].slice(0, count).map(el => ({
+    title:   el.querySelector('title')?.textContent?.trim() || '',
+    link:    el.querySelector('link')?.nextSibling?.nodeValue?.trim()
+             || el.querySelector('guid')?.textContent?.trim() || '#',
+    pubDate: el.querySelector('pubDate')?.textContent?.trim() || '',
+  })).filter(i => i.title && i.title !== '[Removed]');
 }
 
 function fmtPub(raw) {
@@ -840,8 +846,8 @@ let _tickerWidth = 0;
 
 async function fetchMusic() {
   try {
-    const items = await fetchRSS('https://www.nme.com/feed', 15);
-    _tickerItems = items.map(i => i.title.replace(/ - NME.*$/,'').trim()).filter(Boolean);
+    const items = await fetchRSS('https://www.nme.com/feed/', 15);
+    _tickerItems = items.map(i => i.title.replace(/ - NME.*$/i,'').trim()).filter(Boolean);
     buildTicker();
   } catch {
     try {
