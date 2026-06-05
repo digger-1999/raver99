@@ -792,25 +792,13 @@ fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 // ═══════════════════════════════════════════════════════════
 //  TRAINS — Huxley2 / National Rail
 // ═══════════════════════════════════════════════════════════
-const STATION_ABBR = {
-  'Birmingham New Street':   'Brm New St',
-  'Birmingham Moor Street':  'Brm Moor St',
-  'Birmingham Snow Hill':    'Brm Snow Hl',
-  'Birmingham International': 'Brm Intl',
-  'Bristol Temple Meads':    'Bristol TM',
-  'London Euston':           'London Euston',
-  'Wolverhampton':           'Wolverh’ton',
-  'Worcester Foregate Street':'Worcester FS',
-  'Worcester Shrub Hill':    'Worcester SH',
-  'Stratford-upon-Avon':     'Stratford',
-  'Leamington Spa':          'Leam. Spa',
-};
-function abbrevStation(name) {
-  if (STATION_ABBR[name]) return STATION_ABBR[name];
-  return name
-    .replace(/\bBirmingham\b/, 'Brm')
-    .replace(/\bStreet\b/, 'St')
-    .replace(/\bInternational\b/, 'Intl');
+// Reduce a station name to just its town, stripping the station-type suffix.
+function townOf(name) {
+  return (name || '')
+    .replace(/-upon-Avon/i, '')
+    .replace(/\b(New Street|Moor Street|Snow Hill|International|Temple Meads|Foregate Street|Shrub Hill|Parkway|Central|Spa|Street|Road)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 async function fetchTrains() {
@@ -836,7 +824,10 @@ async function fetchTrains() {
     }
 
     const rows = bhm.slice(0, 6).map(s => {
-      const dest  = abbrevStation((s.destination || [{}])[0].locationName || 'Unknown');
+      const destObj  = (s.destination || [{}])[0];
+      const destName = destObj.locationName || '';
+      // Final stop is Birmingham → just "Birmingham"; otherwise it passes through → "via Birmingham"
+      const dest = /Birmingham/i.test(destName) ? townOf(destName) : 'via Birmingham';
       const sched = s.std || '??:??';
       const etd   = s.etd || '';
       const plat  = s.platform ? `<span class="dep-plat">Plt ${s.platform}</span>` : '';
