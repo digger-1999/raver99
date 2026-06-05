@@ -548,8 +548,8 @@ async function renderTransport() {
   const rows = [];
 
   // Buses — live if ATCO codes set, otherwise estimated schedule
-  const atco45 = localStorage.getItem('busAtco45');
-  const atco49 = localStorage.getItem('busAtco49') || '43000401501';
+  const atco45 = localStorage.getItem('busAtco45') || '43000400302';
+  const atco49 = localStorage.getItem('busAtco49') || '43000401102';
   const atcos  = [...new Set([atco45, atco49].filter(Boolean))];
 
   if (atcos.length) {
@@ -597,10 +597,10 @@ renderTransport(); setInterval(renderTransport, 60*1000);
 document.getElementById('bus-cog').onclick = () => {
   const a45 = prompt('ATCO code for route 45 stop\n(leave blank to use estimated schedule)', localStorage.getItem('busAtco45') || '');
   if (a45 === null) return;
-  const a49 = prompt('ATCO code for route 49 stop\n(default: 43000401501 = opp Cadbury College → Rubery)', localStorage.getItem('busAtco49') || '43000401501');
+  const a49 = prompt('ATCO code for route 49 stop\n(43000401102 = opp Cadbury College → Rubery)', localStorage.getItem('busAtco49') || '43000401102');
   if (a49 === null) return;
   if (a45.trim()) localStorage.setItem('busAtco45', a45.trim()); else localStorage.removeItem('busAtco45');
-  localStorage.setItem('busAtco49', a49.trim() || '43000401501');
+  localStorage.setItem('busAtco49', a49.trim() || '43000401102');
   // Clear stale cache
   Object.keys(localStorage).filter(k => k.startsWith('busLive_')).forEach(k => localStorage.removeItem(k));
   renderTransport();
