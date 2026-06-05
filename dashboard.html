@@ -217,17 +217,32 @@
     .bus-time { font-family: var(--font-d); font-weight: 600; color: var(--text); min-width: 2.8rem; font-variant-numeric: tabular-nums; }
     .bus-dest { flex: 1; color: var(--muted); font-size: 0.8rem; }
 
-    /* ── NEWS ───────────────────────────────────────────────── */
-    .news-item {
-      display: flex; gap: 0.4rem; padding: 0.42rem 0;
-      border-bottom: 1px solid var(--border);
-      text-decoration: none; color: var(--text);
-      transition: color 0.15s; align-items: flex-start;
+    /* ── NEWS CAROUSEL ──────────────────────────────────────── */
+    .news-reel { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 0.28rem; }
+    .news-slot { position: relative; flex: 1; overflow: hidden; min-height: 0; cursor: pointer; }
+    .news-card {
+      position: absolute; top: 0; left: 0; right: 0;
+      display: block; text-decoration: none; color: var(--text);
+      transform: translateY(110%); opacity: 0;
+      transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  opacity   0.42s ease;
+      pointer-events: none;
     }
-    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .news-item:hover { color: var(--accent); }
-    .news-num { font-family: var(--font-d); font-size: 0.63rem; font-weight: 700; color: var(--accent); padding-top: 0.14rem; min-width: 0.95rem; }
-    .news-headline { font-size: 0.82rem; line-height: 1.38; font-weight: 500; }
+    .news-card.is-in  { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .news-card.is-out {
+      transform: translateY(-110%); opacity: 0;
+      transition: transform 0.38s cubic-bezier(0.55, 0, 1, 0.45),
+                  opacity   0.28s ease;
+    }
+    .news-card:hover .news-headline { color: var(--accent); }
+    .news-headline { font-size: 0.82rem; line-height: 1.4; font-weight: 500; }
+    .news-pip { display: flex; gap: 0.28rem; flex-shrink: 0; align-items: center; padding-top: 0.05rem; }
+    .news-pip b {
+      display: block; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--border); border: none; padding: 0; cursor: pointer;
+      transition: background 0.25s, transform 0.2s;
+    }
+    .news-pip b.on { background: var(--accent); transform: scale(1.3); }
 
     /* ── TICKER ─────────────────────────────────────────────── */
     #ticker-bar {
@@ -311,10 +326,8 @@
       #trains-wrap .dep-row:nth-child(n+5) { display: none; }
       #buses-wrap  .bus-row:nth-child(n+5) { display: none; }
 
-      .news-item { padding: 0.26rem 0; }
-      .news-item:nth-child(n+3) { display: none; }
       .news-headline { font-size: 0.74rem; line-height: 1.26; }
-      .news-num { font-size: 0.58rem; }
+      .news-pip b { width: 4px; height: 4px; }
 
       #ticker-bar     { height: 2.15rem; }
       #ticker-label   { font-size: 0.57rem; padding: 0 0.6rem; }
@@ -365,15 +378,15 @@
 <div class="news-row">
   <div class="panel">
     <div class="plabel" style="color:var(--orange)"><span class="dot"></span>Birmingham</div>
-    <div id="brum-wrap"><span class="loading">Loading…</span></div>
+    <div id="brum-wrap" class="news-reel"><span class="loading">Loading…</span></div>
   </div>
   <div class="panel">
     <div class="plabel" style="color:var(--sky)"><span class="dot"></span>UK</div>
-    <div id="news-wrap"><span class="loading">Loading…</span></div>
+    <div id="news-wrap" class="news-reel"><span class="loading">Loading…</span></div>
   </div>
   <div class="panel">
     <div class="plabel" style="color:var(--lime)"><span class="dot"></span>Sport</div>
-    <div id="sport-wrap"><span class="loading">Loading…</span></div>
+    <div id="sport-wrap" class="news-reel"><span class="loading">Loading…</span></div>
   </div>
 </div>
 
@@ -610,23 +623,78 @@ async function fetchRSS(url, count=6) {
   return Promise.any(proxyUrls(url).map(p => tryProxy(p, count)));
 }
 
-function renderNews(items, limit=3) {
-  return items.slice(0, limit).map((it, i) => {
-    const headline = it.title.replace(/ - BBC.*$/, '').replace(/ \| .*$/, '').trim();
-    return `<a class="news-item" href="${it.link}" target="_blank" rel="noopener">
-      <span class="news-num">${i+1}</span>
-      <div class="news-headline">${headline}</div>
-    </a>`;
-  }).join('');
+// ── News carousel ────────────────────────────────────────────
+function buildNewsSlot(id, items, limit=3) {
+  const wrap = document.getElementById(id);
+  const list = items.slice(0, limit);
+  if (!list.length) { wrap.innerHTML = `<div class="quip-main">Nothing to show.</div>`; return; }
+
+  wrap.innerHTML =
+    `<div class="news-slot">` +
+    list.map((it, i) => {
+      const h = it.title.replace(/ - BBC.*$/,'').replace(/ \| .*$/,'').trim();
+      return `<a class="news-card${i===0?' is-in':''}" href="${it.link}" target="_blank" rel="noopener">
+        <div class="news-headline">${h}</div>
+      </a>`;
+    }).join('') +
+    `</div><div class="news-pip">${list.map((_,i)=>`<b class="${i===0?'on':''}"></b>`).join('')}</div>`;
+
+  wrap._ci = 0;
+
+  // Touch swipe to advance
+  const slot = wrap.querySelector('.news-slot');
+  let ty0 = null;
+  slot.addEventListener('touchstart', e => { ty0 = e.touches[0].clientY; }, { passive: true });
+  slot.addEventListener('touchend',   e => {
+    if (ty0 === null) return;
+    if (Math.abs(ty0 - e.changedTouches[0].clientY) > 25) advanceNews(wrap);
+    ty0 = null;
+  }, { passive: true });
+
+  // Tap slot to advance on desktop
+  slot.addEventListener('click', () => advanceNews(wrap));
+
+  // Pip clicks
+  wrap.querySelectorAll('.news-pip b').forEach((b, i) => {
+    b.addEventListener('click', e => { e.stopPropagation(); goToNews(wrap, i); });
+  });
 }
 
-async function fetchBrum()  { try { document.getElementById('brum-wrap').innerHTML  = renderNews(await fetchRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml')); } catch { document.getElementById('brum-wrap').innerHTML  = `<div class="quip-main">No Brum news.</div><div class="quip-sub">Either very good or very bad.</div>`; } }
-async function fetchNews()  { try { document.getElementById('news-wrap').innerHTML  = renderNews(await fetchRSS('https://feeds.bbci.co.uk/news/uk/rss.xml')); }                                catch { document.getElementById('news-wrap').innerHTML  = `<div class="quip-main">BBC gone quiet.</div><div class="quip-sub">Licence fee dispute, probably.</div>`; } }
-async function fetchSport() { try { document.getElementById('sport-wrap').innerHTML = renderNews(await fetchRSS('https://feeds.bbci.co.uk/sport/rss.xml'), 3); }                              catch { document.getElementById('sport-wrap').innerHTML = `<div class="quip-main">Sport on a break.</div><div class="quip-sub">Must be a rest day.</div>`; } }
+function advanceNews(wrap) {
+  const n = wrap.querySelectorAll('.news-card').length;
+  if (n < 2) return;
+  goToNews(wrap, ((wrap._ci || 0) + 1) % n);
+}
+
+function goToNews(wrap, next) {
+  const cards = wrap.querySelectorAll('.news-card');
+  const pips  = wrap.querySelectorAll('.news-pip b');
+  const prev  = wrap._ci || 0;
+  if (prev === next) return;
+  cards[prev].classList.remove('is-in'); cards[prev].classList.add('is-out');
+  cards[next].classList.remove('is-out');
+  void cards[next].offsetHeight;          // force reflow → restart transition
+  cards[next].classList.add('is-in');
+  pips[prev]?.classList.remove('on');
+  pips[next]?.classList.add('on');
+  wrap._ci = next;
+}
+
+async function fetchBrum()  { try { buildNewsSlot('brum-wrap',  await fetchRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml')); } catch { document.getElementById('brum-wrap').innerHTML  = `<div class="quip-main">No Brum news.</div><div class="quip-sub">Either very good or very bad.</div>`; } }
+async function fetchNews()  { try { buildNewsSlot('news-wrap',  await fetchRSS('https://feeds.bbci.co.uk/news/uk/rss.xml'));                                     } catch { document.getElementById('news-wrap').innerHTML  = `<div class="quip-main">BBC gone quiet.</div><div class="quip-sub">Licence fee dispute, probably.</div>`; } }
+async function fetchSport() { try { buildNewsSlot('sport-wrap', await fetchRSS('https://feeds.bbci.co.uk/sport/rss.xml'));                                        } catch { document.getElementById('sport-wrap').innerHTML = `<div class="quip-main">Sport on a break.</div><div class="quip-sub">Must be a rest day.</div>`; } }
 
 fetchBrum();  setInterval(fetchBrum,  30*60*1000);
 fetchNews();  setInterval(fetchNews,  30*60*1000);
 fetchSport(); setInterval(fetchSport, 30*60*1000);
+
+// Staggered auto-advance — panels offset so they never flip in sync
+['brum-wrap','news-wrap','sport-wrap'].forEach((id, i) => {
+  setTimeout(() => setInterval(() => {
+    const w = document.getElementById(id);
+    if (w?._ci !== undefined) advanceNews(w);
+  }, 6000), i * 2000);
+});
 
 // ═══════════════════════════════════════════════════════════════
 //  CALENDAR — Google Calendar secret iCal, fetched via proxy race.
