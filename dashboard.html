@@ -141,8 +141,6 @@
 
     /* ── LAYOUT ROWS ────────────────────────────────────────── */
     .transport-row { display: flex; gap: 0.7rem; }
-    .panel-trains  { flex: 1.8; }
-    .panel-buses   { flex: 1; }
 
     .news-row { display: flex; gap: 0.7rem; }
     .news-row .panel { flex: 1; }
@@ -209,12 +207,12 @@
       transition: border-color 0.15s;
     }
     .bus-row:hover { border-color: rgba(192,132,252,0.2); }
-    .bus-badge {
+    .bus-badge, .trn-badge {
       font-size: 0.68rem; font-weight: 800; padding: 0.14rem 0.44rem;
       border-radius: 5px; min-width: 2.1rem; text-align: center; flex-shrink: 0;
-      background: rgba(192,132,252,0.12); color: var(--purple);
-      border: 1px solid rgba(192,132,252,0.28);
     }
+    .bus-badge { background: rgba(192,132,252,0.12); color: var(--purple); border: 1px solid rgba(192,132,252,0.28); }
+    .trn-badge { background: rgba(74,222,128,0.10);  color: var(--green);  border: 1px solid rgba(74,222,128,0.25); }
     .bus-time { font-family: var(--font-d); font-weight: 600; color: var(--text); min-width: 2.8rem; font-variant-numeric: tabular-nums; }
     .bus-dest { flex: 1; color: var(--muted); font-size: 0.8rem; }
 
@@ -283,8 +281,6 @@
 
     /* ── TABLET  601–900 ────────────────────────────────────── */
     @media (max-width: 900px) {
-      .transport-row { flex-wrap: wrap; }
-      .panel-trains, .panel-buses { flex: 1 1 45%; }
       .news-row { flex-wrap: wrap; }
       .news-row .panel { flex: 1 1 30%; }
     }
@@ -307,8 +303,6 @@
       #wisdom { font-size: 0.6rem; }
 
       .transport-row { flex: 1.4; min-height: 0; gap: 0.38rem; }
-      .panel-trains  { flex: 1.8; }
-      .panel-buses   { flex: 1; }
 
       .agenda-row { flex: 0.75; min-height: 0; gap: 0.38rem; }
       .cal-legend { display: none; }
@@ -322,10 +316,9 @@
       .plabel { font-size: 0.54rem; padding-bottom: 0.2rem; }
       .plabel .dot { width: 4px; height: 4px; }
 
-      .dep-row, .bus-row { padding: 0.3rem 0.42rem; font-size: 0.76rem; border-radius: 7px; }
-      .dep-time, .bus-time { min-width: 2.3rem; }
-      #trains-wrap .dep-row:nth-child(n+5) { display: none; }
-      #buses-wrap  .bus-row:nth-child(n+5) { display: none; }
+      .dep-row { padding: 0.3rem 0.42rem; font-size: 0.76rem; border-radius: 7px; }
+      .dep-time { min-width: 2.3rem; }
+      #transport-wrap .dep-row:nth-child(n+7) { display: none; }
 
       .news-headline { font-size: 0.74rem; line-height: 1.26; -webkit-line-clamp: 2; }
       .news-pip b { width: 4px; height: 4px; }
@@ -357,13 +350,9 @@
 
 <!-- ── TRANSPORT ─────────────────────────────────────────────── -->
 <div class="transport-row">
-  <div class="panel panel-trains">
-    <div class="plabel" style="color:var(--green)"><span class="dot"></span>Trains to Town</div>
-    <div id="trains-wrap"><span class="loading">Loading departures…</span></div>
-  </div>
-  <div class="panel panel-buses">
-    <div class="plabel" style="color:var(--purple)"><span class="dot"></span>Buses 45 · 49</div>
-    <div id="buses-wrap"></div>
+  <div class="panel">
+    <div class="plabel" style="color:var(--accent)"><span class="dot"></span>Departures</div>
+    <div id="transport-wrap"><span class="loading">Loading departures…</span></div>
   </div>
 </div>
 
@@ -510,49 +499,7 @@ async function fetchWeather() {
 fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 
 // ═══════════════════════════════════════════════════════════════
-//  TRAINS
-// ═══════════════════════════════════════════════════════════════
-async function fetchTrains() {
-  const wrap = document.getElementById('trains-wrap');
-  try {
-    const res  = await fetch('https://huxley2.azurewebsites.net/departures/KNN/12');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const all  = data.trainServices || [];
-    const bhm  = all.filter(s => {
-      const dest = (s.destination || [{}])[0];
-      return /Birmingham/i.test(dest.locationName || '') || /Birmingham/i.test(dest.via || '');
-    });
-
-    if (!bhm.length) {
-      wrap.innerHTML = `<div class="quip-main">No Birmingham services right now.</div>`;
-      return;
-    }
-
-    wrap.innerHTML = bhm.slice(0, 4).map(s => {
-      const destName = (s.destination || [{}])[0].locationName || '';
-      const dest  = /Birmingham/i.test(destName) ? 'Town' : 'via Town';
-      const sched = s.std || '??:??';
-      const etd   = s.etd || '';
-      let status;
-      if      (etd === 'On time')   status = `<span class="dep-ok">●</span>`;
-      else if (etd === 'Cancelled') status = `<span class="dep-can">✕</span>`;
-      else if (etd === 'Delayed')   status = `<span class="dep-del">▲</span>`;
-      else                          status = `<span class="dep-del">${etd}</span>`;
-      return `<div class="dep-row">
-        <span class="dep-time">${sched}</span>
-        <span class="dep-dest">${dest}</span>
-        ${status}
-      </div>`;
-    }).join('');
-  } catch (e) {
-    wrap.innerHTML = `<div class="quip-main">Huxley's offline.</div><div class="quip-sub">${e.message}</div>`;
-  }
-}
-fetchTrains(); setInterval(fetchTrains, 60*1000);
-
-// ═══════════════════════════════════════════════════════════════
-//  BUSES
+//  TRANSPORT — trains + buses merged chronologically
 // ═══════════════════════════════════════════════════════════════
 const BUS_SCHEDULE = {
   '45': { dest: 'City Centre', interval: 10, we: 12, first: '05:30', last: '23:15' },
@@ -562,32 +509,70 @@ const BUS_SCHEDULE = {
 function toMins(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
 function toTime(m) { return `${pad(Math.floor(m/60)%24)}:${pad(m%60)}`; }
 
-function renderBuses() {
-  const wrap = document.getElementById('buses-wrap');
+async function renderTransport() {
+  const wrap = document.getElementById('transport-wrap');
   const now  = new Date();
   const cur  = now.getHours()*60 + now.getMinutes();
   const isWe = now.getDay()===0 || now.getDay()===6;
-  const deps = [];
+  const rows = [];
+
+  // Buses (always available)
   for (const [route, s] of Object.entries(BUS_SCHEDULE)) {
     const iv = isWe ? s.we : s.interval;
     let t = toMins(s.first);
-    const last = toMins(s.last);
-    while (t <= last) { if (t >= cur) deps.push({ route, time: t, dest: s.dest }); t += iv; }
+    while (t <= toMins(s.last)) {
+      if (t >= cur) rows.push({
+        mins: t,
+        html: `<div class="dep-row">
+          <span class="bus-badge">${route}</span>
+          <span class="dep-time" style="color:var(--text)">${toTime(t)}</span>
+          <span class="dep-dest">${s.dest}</span>
+        </div>`
+      });
+      t += iv;
+    }
   }
-  deps.sort((a,b) => a.time - b.time);
-  const next = deps.slice(0, 4);
+
+  // Trains (async — missing is fine, buses still show)
+  try {
+    const res  = await fetch('https://huxley2.azurewebsites.net/departures/KNN/12');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const bhm  = (data.trainServices || []).filter(s => {
+      const d = (s.destination || [{}])[0];
+      return /Birmingham/i.test(d.locationName || '') || /Birmingham/i.test(d.via || '');
+    });
+    for (const s of bhm) {
+      const sched    = s.std || '??:??';
+      const etd      = s.etd || '';
+      const destName = (s.destination || [{}])[0].locationName || '';
+      const dest     = /Birmingham/i.test(destName) ? 'Town' : 'via Town';
+      let status;
+      if      (etd === 'On time')   status = `<span class="dep-ok">●</span>`;
+      else if (etd === 'Cancelled') status = `<span class="dep-can">✕</span>`;
+      else if (etd === 'Delayed')   status = `<span class="dep-del">▲</span>`;
+      else                          status = `<span class="dep-del">${etd}</span>`;
+      rows.push({
+        mins: toMins(sched),
+        html: `<div class="dep-row">
+          <span class="trn-badge">TRN</span>
+          <span class="dep-time">${sched}</span>
+          <span class="dep-dest">${dest}</span>
+          ${status}
+        </div>`
+      });
+    }
+  } catch { /* trains down — buses still render */ }
+
+  rows.sort((a, b) => a.mins - b.mins);
+  const next = rows.slice(0, 6);
   if (!next.length) {
     wrap.innerHTML = `<div class="quip-main">No more services today.</div>`;
     return;
   }
-  wrap.innerHTML = next.map(d => `
-    <div class="bus-row">
-      <span class="bus-badge">${d.route}</span>
-      <span class="bus-time">${toTime(d.time)}</span>
-      <span class="bus-dest">${d.dest}</span>
-    </div>`).join('');
+  wrap.innerHTML = next.map(r => r.html).join('');
 }
-renderBuses(); setInterval(renderBuses, 60*1000);
+renderTransport(); setInterval(renderTransport, 60*1000);
 
 // ═══════════════════════════════════════════════════════════════
 //  RSS — race 3 proxies, take the winner
