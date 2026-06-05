@@ -267,8 +267,8 @@
 
       .dep-row, .bus-row { padding: 0.3rem 0.42rem; font-size: 0.76rem; border-radius: 7px; }
       .dep-time, .bus-time { min-width: 2.3rem; }
-      #trains-wrap .dep-row:nth-child(n+4) { display: none; }
-      #buses-wrap  .bus-row:nth-child(n+4) { display: none; }
+      #trains-wrap .dep-row:nth-child(n+5) { display: none; }
+      #buses-wrap  .bus-row:nth-child(n+5) { display: none; }
 
       .news-item { padding: 0.26rem 0; }
       .news-item:nth-child(n+3) { display: none; }
@@ -303,7 +303,7 @@
 <!-- ── TRANSPORT ─────────────────────────────────────────────── -->
 <div class="transport-row">
   <div class="panel panel-trains">
-    <div class="plabel" style="color:var(--green)"><span class="dot"></span>Trains to Birmingham</div>
+    <div class="plabel" style="color:var(--green)"><span class="dot"></span>Trains to Town</div>
     <div id="trains-wrap"><span class="loading">Loading departures…</span></div>
   </div>
   <div class="panel panel-buses">
@@ -449,13 +449,6 @@ fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 // ═══════════════════════════════════════════════════════════════
 //  TRAINS
 // ═══════════════════════════════════════════════════════════════
-function townOf(name) {
-  return (name || '')
-    .replace(/-upon-Avon/i, '')
-    .replace(/\b(New Street|Moor Street|Snow Hill|International|Temple Meads|Foregate Street|Shrub Hill|Parkway|Central|Spa|Street|Road)\b/gi, '')
-    .replace(/\s+/g, ' ').trim();
-}
-
 async function fetchTrains() {
   const wrap = document.getElementById('trains-wrap');
   try {
@@ -473,9 +466,9 @@ async function fetchTrains() {
       return;
     }
 
-    wrap.innerHTML = bhm.slice(0, 6).map(s => {
+    wrap.innerHTML = bhm.slice(0, 4).map(s => {
       const destName = (s.destination || [{}])[0].locationName || '';
-      const dest  = /Birmingham/i.test(destName) ? townOf(destName) : 'via Birmingham';
+      const dest  = /Birmingham/i.test(destName) ? 'Town' : 'via Town';
       const sched = s.std || '??:??';
       const etd   = s.etd || '';
       let status;
@@ -519,7 +512,7 @@ function renderBuses() {
     while (t <= last) { if (t >= cur) deps.push({ route, time: t, dest: s.dest }); t += iv; }
   }
   deps.sort((a,b) => a.time - b.time);
-  const next = deps.slice(0, 6);
+  const next = deps.slice(0, 4);
   if (!next.length) {
     wrap.innerHTML = `<div class="quip-main">No more services today.</div>`;
     return;
