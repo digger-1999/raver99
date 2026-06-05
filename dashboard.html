@@ -58,13 +58,13 @@
       backdrop-filter: blur(16px) saturate(140%);
       -webkit-backdrop-filter: blur(16px) saturate(140%);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.6rem 2rem;
+      border-radius: 16px;
+      padding: 0.9rem 1.5rem;
       position: relative;
       overflow: hidden;
       display: grid;
       grid-template-columns: 1fr 1.6fr 1fr;
-      gap: 1.5rem;
+      gap: 1rem;
       align-items: center;
       box-shadow: 0 18px 50px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
     }
@@ -72,9 +72,9 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 3px;
+      height: 2px;
       background: linear-gradient(90deg, var(--accent), var(--purple), var(--gold), var(--green));
-      opacity: 0.9;
+      opacity: 0.4;
     }
 
     .header-left  { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -83,8 +83,8 @@
     #clock {
       text-align: center;
       font-family: var(--font-display);
-      font-size: clamp(3rem, 9vw, 6rem);
-      font-weight: 500;
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-weight: 300;
       letter-spacing: 0.01em;
       line-height: 1;
       font-variant-numeric: tabular-nums;
@@ -92,7 +92,7 @@
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 4px 18px rgba(255, 200, 87, 0.25));
+      filter: drop-shadow(0 2px 10px rgba(255, 200, 87, 0.18));
     }
     .clock-ampm {
       font-size: 0.32em;
@@ -103,24 +103,18 @@
       -webkit-text-fill-color: var(--muted);
       filter: none;
     }
-    #greeting {
-      text-align: center;
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-top: 0.5rem;
-      font-weight: 500;
-    }
+    #greeting { display: none; }
 
     #date-display {
       font-family: var(--font-display);
-      font-size: 1.05rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      font-weight: 500;
       color: var(--sky);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
     }
     #moon-display {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       color: var(--muted);
     }
 
@@ -380,9 +374,7 @@
       -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     }
     .wx-desc { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
-    .wx-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-    .wx-meta span { font-size: 0.78rem; color: var(--muted); }
-    .wx-meta strong { color: var(--text); font-weight: 600; }
+    .wx-sub  { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.01em; }
     .wx-quip {
       font-size: 0.82rem; color: var(--text); font-style: italic;
       padding: 0.7rem 0.95rem; background: var(--surface2);
@@ -636,7 +628,7 @@ function tick() {
   document.getElementById('clock').innerHTML =
     `${h12}:${pad(n.getMinutes())}:${pad(n.getSeconds())}<span class="clock-ampm">${ampm}</span>`;
   document.getElementById('date-display').textContent =
-    `${DAYS[n.getDay()].toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].toUpperCase()} ${n.getFullYear()}`;
+    `${DAYS[n.getDay()].slice(0,3).toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].slice(0,3).toUpperCase()}`;
   document.getElementById('greeting').textContent = greeting(h);
   updateMoon(n);
 }
@@ -786,17 +778,8 @@ async function fetchWeather() {
           <div class="wx-desc">${icon.label}</div>
         </div>
       </div>
-      <div class="wx-meta">
-        <span>Feels <strong>${Math.round(cur.apparent_temperature)}°C</strong></span>
-        <span>Humidity <strong>${cur.relative_humidity_2m}%</strong></span>
-        <span>Wind <strong>${Math.round(cur.windspeed_10m)} mph</strong></span>
-      </div>
-      <div class="wx-quip">${clothingAdvice(cur.apparent_temperature, cur.weathercode)}</div>
-      <div class="wx-tomorrow">
-        <div class="section-label">Tomorrow — Hi ${tmrMax}° Lo ${tmrMin}°</div>
-        <div class="wx-hourly">${renderTomorrowHours(d.hourly.time, d.hourly.temperature_2m, d.hourly.weathercode, d.hourly.precipitation_probability)}</div>
-      </div>
-      <div class="updated-note">Open-Meteo · ${new Date().toLocaleTimeString('en-GB')}</div>`;
+      <div class="wx-sub">Tmr ${tmrMax}°↑ ${tmrMin}°↓ &middot; feels ${Math.round(cur.apparent_temperature)}°</div>
+      <div class="wx-quip">${clothingAdvice(cur.apparent_temperature, cur.weathercode)}</div>`;
   } catch (err) {
     wrap.innerHTML = `<div class="quip-wrap">
       <div class="quip-main">Try looking out the window.</div>
