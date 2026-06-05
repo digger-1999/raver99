@@ -153,17 +153,23 @@
     .cal-list { display: flex; flex-wrap: wrap; gap: 0.42rem; }
     .cal-item {
       display: inline-flex; align-items: baseline; gap: 0.46rem;
-      padding: 0.34rem 0.62rem;
+      padding: 0.34rem 0.62rem 0.34rem 0.56rem;
       background: var(--row2);
-      border: 1px solid transparent;
-      border-radius: 8px; font-size: 0.82rem;
-      transition: border-color 0.15s;
+      border-left: 2px solid var(--gold);   /* timed = gold */
+      border-radius: 6px; font-size: 0.82rem;
+      transition: background 0.15s;
     }
-    .cal-item:hover { border-color: rgba(255,200,87,0.22); }
+    .cal-item:hover { background: rgba(255,255,255,0.06); }
+    .cal-item.allday { border-left-color: var(--sky); }   /* all-day = blue */
+    .cal-item.allday .cal-when { color: var(--sky); }
     .cal-when  { font-family: var(--font-d); font-weight: 600; color: var(--gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
     .cal-title { color: var(--text); }
+    .cal-legend { margin-left: auto; display: flex; gap: 0.55rem; font-size: 0.55rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+    .cal-legend i { font-style: normal; }
+    .cal-legend .lg-timed::before  { content: '●'; color: var(--gold); margin-right: 0.22em; }
+    .cal-legend .lg-allday::before { content: '●'; color: var(--sky);  margin-right: 0.22em; }
     .cal-cog {
-      margin-left: auto; cursor: pointer; color: var(--muted);
+      margin-left: 0.7rem; cursor: pointer; color: var(--muted);
       font-size: 0.62rem; letter-spacing: 0.08em; opacity: 0.55;
       font-family: var(--font-b); font-weight: 500;
     }
@@ -289,7 +295,8 @@
       .panel-buses   { flex: 1; }
 
       .agenda-row { flex: 0.75; min-height: 0; gap: 0.38rem; }
-      .cal-item { padding: 0.24rem 0.48rem; font-size: 0.72rem; gap: 0.36rem; }
+      .cal-legend { display: none; }
+      .cal-item { padding: 0.24rem 0.4rem 0.24rem 0.34rem; font-size: 0.72rem; gap: 0.36rem; }
       .cal-item:nth-child(n+5) { display: none; }
 
       .news-row { flex: 1; min-height: 0; gap: 0.38rem; }
@@ -349,7 +356,7 @@
 <!-- ── AGENDA ────────────────────────────────────────────────── -->
 <div class="agenda-row">
   <div class="panel">
-    <div class="plabel" style="color:var(--gold)"><span class="dot"></span>Next 24h &amp; Tomorrow<span class="cal-cog" id="cal-cog">⚙ edit</span></div>
+    <div class="plabel" style="color:var(--gold)"><span class="dot"></span>Next 24h &amp; Tomorrow<span class="cal-legend"><i class="lg-timed">Timed</i><i class="lg-allday">All-day</i></span><span class="cal-cog" id="cal-cog">⚙ edit</span></div>
     <div id="cal-wrap"><span class="loading">Loading agenda…</span></div>
   </div>
 </div>
@@ -750,7 +757,7 @@ async function fetchCalendar() {
     const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
     if (!occ.length) { wrap.innerHTML = `<div class="empty-note">Nothing in the next 24h — enjoy it.</div>`; return; }
     wrap.innerHTML = `<div class="cal-list">` + occ.map(o => `
-      <div class="cal-item">
+      <div class="cal-item${o.allday ? ' allday' : ''}">
         <span class="cal-when">${calWhen(o, startToday)}</span>
         <span class="cal-title">${o.summary || '(no title)'}</span>
       </div>`).join('') + `</div>`;
