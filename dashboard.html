@@ -62,10 +62,9 @@
       padding: 0.75rem 1.4rem;
       position: relative;
       overflow: hidden;
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 1.4rem;
-      align-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
       box-shadow: 0 10px 36px -18px rgba(0,0,0,0.65);
     }
     header::before {
@@ -75,34 +74,29 @@
       opacity: 0.38;
     }
 
-    #clock {
+    .hdr-main { display: flex; align-items: center; gap: 1rem; }
+
+    #date-display {
       font-family: var(--font-d);
-      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-size: clamp(1.9rem, 5vw, 3.5rem);
       font-weight: 300;
       letter-spacing: -0.01em;
       line-height: 1;
-      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
       background: linear-gradient(180deg, #ffe2a3 0%, var(--gold) 58%, #f0a93c 100%);
       -webkit-background-clip: text; background-clip: text;
       -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 2px 10px rgba(255,200,87,0.18));
-      white-space: nowrap;
-    }
-    .clock-ampm {
-      font-size: 0.3em; font-weight: 500; letter-spacing: 0.06em;
-      margin-left: 0.28em; vertical-align: 0.46em;
-      -webkit-text-fill-color: var(--muted); filter: none;
     }
 
-    .hdr-right { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
-
-    .hdr-meta {
-      display: flex; align-items: center; gap: 0.42rem;
-      flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); line-height: 1.4;
+    .hdr-aside {
+      margin-left: auto;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 0.22rem;
     }
-    .hdr-meta .sep { color: var(--bhi); user-select: none; font-size: 0.7rem; }
-    #date-display  { color: var(--sky); font-weight: 600; font-family: var(--font-d); letter-spacing: 0.02em; }
-    #wx-garment-s  { color: var(--gold); font-weight: 600; }
+    .hdr-wx { display: flex; align-items: center; gap: 0.36rem; font-size: 0.78rem; color: var(--muted); }
+    .hdr-wx .sep { color: var(--bhi); font-size: 0.7rem; user-select: none; }
+    #wx-garment-s { color: var(--gold); font-weight: 600; }
+    #moon-display { font-size: 0.72rem; color: var(--muted); }
 
     #wisdom {
       font-size: 0.68rem; color: var(--muted);
@@ -299,8 +293,9 @@
         padding: 0.48rem 0.85rem; gap: 0.75rem;
         border-radius: 11px;
       }
-      #clock { font-size: 2.25rem; }
-      .hdr-meta { font-size: 0.7rem; gap: 0.3rem; }
+      #date-display { font-size: 1.85rem; }
+      .hdr-wx { font-size: 0.68rem; }
+      #moon-display { font-size: 0.65rem; }
       #wisdom { font-size: 0.6rem; }
 
       .transport-row { flex: 1.4; min-height: 0; gap: 0.38rem; }
@@ -334,19 +329,17 @@
 
 <!-- ── HEADER ───────────────────────────────────────────────── -->
 <header>
-  <div id="clock">00:00<span class="clock-ampm">am</span></div>
-  <div class="hdr-right">
-    <div class="hdr-meta">
-      <span id="date-display">—</span>
-      <span class="sep">·</span>
-      <span id="moon-display">—</span>
-      <span class="sep">·</span>
-      <span id="wx-icon-s"></span><span id="wx-cond-s">—</span>
-      <span class="sep">·</span>
-      <span id="wx-garment-s">—</span>
+  <div class="hdr-main">
+    <div id="date-display">—</div>
+    <div class="hdr-aside">
+      <div class="hdr-wx">
+        <span id="wx-icon-s"></span><span id="wx-cond-s">—</span>
+        <span class="sep">·</span><span id="wx-garment-s">—</span>
+      </div>
+      <div id="moon-display">—</div>
     </div>
-    <div id="wisdom"></div>
   </div>
+  <div id="wisdom"></div>
 </header>
 
 <!-- ── TRANSPORT ─────────────────────────────────────────────── -->
@@ -401,15 +394,11 @@ function pad(n) { return String(n).padStart(2,'0'); }
 
 function tick() {
   const n = new Date(), h = n.getHours();
-  const h12 = h % 12 || 12;
-  const ampm = h >= 12 ? 'pm' : 'am';
-  document.getElementById('clock').innerHTML =
-    `${h12}:${pad(n.getMinutes())}<span class="clock-ampm">${ampm}</span>`;
   document.getElementById('date-display').textContent =
     `${DAYS[n.getDay()].slice(0,3).toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].slice(0,3).toUpperCase()}`;
   updateMoon(n);
 }
-tick(); setInterval(tick, 1000);
+tick(); setInterval(tick, 60000);
 
 // ═══════════════════════════════════════════════════════════════
 //  MOON
