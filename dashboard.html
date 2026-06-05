@@ -146,6 +146,36 @@
     .news-row { display: flex; gap: 0.7rem; }
     .news-row .panel { flex: 1; }
 
+    .agenda-row { display: flex; gap: 0.7rem; }
+    .agenda-row .panel { flex: 1; }
+
+    /* ── AGENDA / CALENDAR ──────────────────────────────────── */
+    .cal-list { display: flex; flex-wrap: wrap; gap: 0.42rem; }
+    .cal-item {
+      display: inline-flex; align-items: baseline; gap: 0.46rem;
+      padding: 0.34rem 0.62rem;
+      background: var(--row2);
+      border: 1px solid transparent;
+      border-radius: 8px; font-size: 0.82rem;
+      transition: border-color 0.15s;
+    }
+    .cal-item:hover { border-color: rgba(255,200,87,0.22); }
+    .cal-when  { font-family: var(--font-d); font-weight: 600; color: var(--gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .cal-title { color: var(--text); }
+    .cal-cog {
+      margin-left: auto; cursor: pointer; color: var(--muted);
+      font-size: 0.62rem; letter-spacing: 0.08em; opacity: 0.55;
+      font-family: var(--font-b); font-weight: 500;
+    }
+    .cal-cog:hover { opacity: 1; color: var(--gold); }
+    .cal-connect {
+      display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;
+      padding: 0.42rem 0.75rem; font-family: var(--font-b); font-size: 0.8rem;
+      color: var(--muted); background: none;
+      border: 1px dashed var(--border); border-radius: 8px;
+    }
+    .cal-connect:hover { border-color: var(--bhi); color: var(--text); }
+
     /* ── TRAINS ─────────────────────────────────────────────── */
     .dep-row {
       display: flex; align-items: center; gap: 0.48rem;
@@ -254,9 +284,13 @@
       .hdr-meta { font-size: 0.7rem; gap: 0.3rem; }
       #wisdom { font-size: 0.6rem; }
 
-      .transport-row { flex: 1.5; min-height: 0; gap: 0.38rem; }
+      .transport-row { flex: 1.4; min-height: 0; gap: 0.38rem; }
       .panel-trains  { flex: 1.8; }
       .panel-buses   { flex: 1; }
+
+      .agenda-row { flex: 0.75; min-height: 0; gap: 0.38rem; }
+      .cal-item { padding: 0.24rem 0.48rem; font-size: 0.72rem; gap: 0.36rem; }
+      .cal-item:nth-child(n+5) { display: none; }
 
       .news-row { flex: 1; min-height: 0; gap: 0.38rem; }
       .news-row .panel { flex: 1; }
@@ -309,6 +343,14 @@
   <div class="panel panel-buses">
     <div class="plabel" style="color:var(--purple)"><span class="dot"></span>Buses 45 · 49</div>
     <div id="buses-wrap"></div>
+  </div>
+</div>
+
+<!-- ── AGENDA ────────────────────────────────────────────────── -->
+<div class="agenda-row">
+  <div class="panel">
+    <div class="plabel" style="color:var(--gold)"><span class="dot"></span>Next 24h &amp; Tomorrow<span class="cal-cog" id="cal-cog">⚙ edit</span></div>
+    <div id="cal-wrap"><span class="loading">Loading agenda…</span></div>
   </div>
 </div>
 
@@ -578,6 +620,149 @@ async function fetchSport() { try { document.getElementById('sport-wrap').innerH
 fetchBrum();  setInterval(fetchBrum,  30*60*1000);
 fetchNews();  setInterval(fetchNews,  30*60*1000);
 fetchSport(); setInterval(fetchSport, 30*60*1000);
+
+// ═══════════════════════════════════════════════════════════════
+//  CALENDAR — Google Calendar secret iCal, fetched via proxy race.
+//  URL lives in this browser's localStorage only (never committed).
+// ═══════════════════════════════════════════════════════════════
+const CAL_KEY = 'gcalIcal';
+
+function promptForCal() {
+  const url = prompt(
+    'Paste your Google Calendar “Secret address in iCal format”.\n' +
+    '(Google Calendar → Settings → click your calendar → Integrate calendar)\n\n' +
+    'Stored only in this browser. Leave blank to disconnect.',
+    localStorage.getItem(CAL_KEY) || '');
+  if (url === null) return;
+  const u = url.trim();
+  if (u) localStorage.setItem(CAL_KEY, u); else localStorage.removeItem(CAL_KEY);
+  fetchCalendar();
+}
+
+async function tryProxyText(px) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const res = await fetch(px, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    if (!txt.includes('BEGIN:VCALENDAR')) throw new Error('not ical');
+    return txt;
+  } catch (e) { clearTimeout(t); throw e; }
+}
+
+function icalUnfold(t) { return t.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, ''); }
+
+function icalParseDt(raw) {
+  const m = raw.match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/);
+  if (!m) return null;
+  const Y = +m[1], Mo = +m[2] - 1, D = +m[3];
+  if (m[4] === undefined) return { date: new Date(Y, Mo, D), allday: true };
+  const h = +m[4], mi = +m[5], s = +(m[6] || 0);
+  const date = m[7] ? new Date(Date.UTC(Y, Mo, D, h, mi, s)) : new Date(Y, Mo, D, h, mi, s);
+  return { date, allday: false };
+}
+
+function parseEvents(raw) {
+  const lines = icalUnfold(raw).split(/\r?\n/);
+  const evs = []; let e = null;
+  for (const line of lines) {
+    if (line === 'BEGIN:VEVENT') { e = {}; continue; }
+    if (line === 'END:VEVENT')   { if (e) evs.push(e); e = null; continue; }
+    if (!e) continue;
+    const ci = line.indexOf(':'); if (ci < 0) continue;
+    const key = line.slice(0, ci), val = line.slice(ci + 1), base = key.split(';')[0].toUpperCase();
+    if (base === 'DTSTART')      e.start = icalParseDt(val);
+    else if (base === 'RRULE')   e.rrule = Object.fromEntries(val.split(';').map(p => p.split('=')));
+    else if (base === 'SUMMARY') e.summary = val.replace(/\\,/g, ',').replace(/\\n/gi, ' ').trim();
+  }
+  return evs;
+}
+
+function ruleHitsDay(start, day, rule) {
+  const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  if (s > day) return false;
+  if (rule.UNTIL) { const u = icalParseDt(rule.UNTIL); if (u && u.date < day) return false; }
+  const iv = parseInt(rule.INTERVAL || '1'), F = rule.FREQ;
+  if (F === 'DAILY')  return Math.round((day - s) / 86400000) % iv === 0;
+  if (F === 'WEEKLY') {
+    const DOW = { SU:0, MO:1, TU:2, WE:3, TH:4, FR:5, SA:6 };
+    const days = rule.BYDAY ? rule.BYDAY.split(',').map(d => DOW[d.replace(/[^A-Z]/g, '')]) : [s.getDay()];
+    if (!days.includes(day.getDay())) return false;
+    const s0 = new Date(s); s0.setDate(s0.getDate() - s0.getDay());
+    const d0 = new Date(day); d0.setDate(d0.getDate() - d0.getDay());
+    return Math.round((d0 - s0) / 604800000) % iv === 0;
+  }
+  if (F === 'MONTHLY') return s.getDate() === day.getDate();
+  if (F === 'YEARLY')  return s.getMonth() === day.getMonth() && s.getDate() === day.getDate();
+  return false;
+}
+
+function collectOccurrences(evs) {
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow   = new Date(startToday); tomorrow.setDate(tomorrow.getDate() + 1);
+  const endWindow  = new Date(tomorrow); endWindow.setHours(23, 59, 59, 999);
+  const days = [startToday, tomorrow];
+  const out = [];
+  const push = occ => {
+    if (occ.date > endWindow) return;
+    if (occ.allday) { if (occ.date >= startToday) out.push(occ); }
+    else            { if (occ.date >= now)        out.push(occ); }
+  };
+  for (const e of evs) {
+    if (!e.start) continue;
+    if (e.rrule) {
+      for (const day of days) {
+        if (!ruleHitsDay(e.start.date, day, e.rrule)) continue;
+        const occ = e.start.allday
+          ? { date: new Date(day), allday: true, summary: e.summary }
+          : { date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), e.start.date.getHours(), e.start.date.getMinutes()), allday: false, summary: e.summary };
+        push(occ);
+      }
+    } else {
+      push({ date: e.start.date, allday: e.start.allday, summary: e.summary });
+    }
+  }
+  out.sort((a, b) => a.date - b.date);
+  return out.slice(0, 6);
+}
+
+function calWhen(o, startToday) {
+  const isTomorrow = o.date >= new Date(startToday.getTime() + 86400000);
+  if (o.allday) return isTomorrow ? 'Tom · all day' : 'All day';
+  const when = `${pad(o.date.getHours())}:${pad(o.date.getMinutes())}`;
+  return isTomorrow ? `Tom ${when}` : when;
+}
+
+async function fetchCalendar() {
+  const wrap = document.getElementById('cal-wrap');
+  const url  = localStorage.getItem(CAL_KEY);
+  if (!url) {
+    wrap.innerHTML = `<button class="cal-connect" id="cal-connect">＋ Connect Google Calendar</button>`;
+    document.getElementById('cal-connect').onclick = promptForCal;
+    return;
+  }
+  try {
+    const txt = await Promise.any(proxyUrls(url).map(tryProxyText));
+    const occ = collectOccurrences(parseEvents(txt));
+    const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+    if (!occ.length) { wrap.innerHTML = `<div class="empty-note">Nothing in the next 24h — enjoy it.</div>`; return; }
+    wrap.innerHTML = `<div class="cal-list">` + occ.map(o => `
+      <div class="cal-item">
+        <span class="cal-when">${calWhen(o, startToday)}</span>
+        <span class="cal-title">${o.summary || '(no title)'}</span>
+      </div>`).join('') + `</div>`;
+  } catch (e) {
+    wrap.innerHTML = `<div class="quip-main">Calendar unreachable.</div>
+      <div class="quip-sub">Check the link · <a href="#" id="cal-retry" style="color:var(--accent)">edit</a></div>`;
+    const r = document.getElementById('cal-retry');
+    if (r) r.onclick = ev => { ev.preventDefault(); promptForCal(); };
+  }
+}
+document.getElementById('cal-cog').onclick = promptForCal;
+fetchCalendar(); setInterval(fetchCalendar, 15*60*1000);
 
 // ═══════════════════════════════════════════════════════════════
 //  MUSIC TICKER
