@@ -6,599 +6,329 @@
   <title>Kings Norton Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-1:     #080b14;
-      --bg-2:     #0d1322;
-      --surface:  rgba(23, 29, 47, 0.72);
-      --surface2: rgba(33, 41, 64, 0.55);
-      --border:   rgba(255, 255, 255, 0.08);
-      --border-2: rgba(255, 255, 255, 0.14);
-      --accent:   #5eb3ff;   /* sky blue */
-      --gold:     #ffc857;   /* warm amber — the clock */
-      --green:    #4ade80;
-      --yellow:   #fbbf24;
-      --red:      #f87171;
-      --purple:   #c084fc;
-      --orange:   #ffb454;
-      --pink:     #f472b6;
-      --muted:    #8b93a7;
-      --text:     #e8edf7;
-      --sky:      #7cc4ff;
-      --chartreuse: #86efac;
-      --blues:    #2b6fd4;   /* Birmingham City blue */
-      --font-display: 'Space Grotesk', system-ui, sans-serif;
-      --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+      --bg-1:   #080b14;
+      --bg-2:   #0d1322;
+      --surf:   rgba(23, 29, 47, 0.7);
+      --panel:  rgba(255, 255, 255, 0.028);
+      --row2:   rgba(33, 41, 64, 0.5);
+      --border: rgba(255, 255, 255, 0.07);
+      --bhi:    rgba(255, 255, 255, 0.12);
+      --accent: #5eb3ff;
+      --gold:   #ffc857;
+      --green:  #4ade80;
+      --yellow: #fbbf24;
+      --red:    #f87171;
+      --purple: #c084fc;
+      --orange: #ffb454;
+      --pink:   #f472b6;
+      --muted:  #8b93a7;
+      --text:   #e8edf7;
+      --sky:    #7cc4ff;
+      --lime:   #86efac;
+      --font-d: 'Space Grotesk', system-ui, sans-serif;
+      --font-b: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     body {
-      font-family: var(--font-body);
+      font-family: var(--font-b);
       background:
-        radial-gradient(1200px 600px at 12% -8%, rgba(94, 179, 255, 0.10), transparent 60%),
-        radial-gradient(1000px 700px at 105% 10%, rgba(192, 132, 252, 0.08), transparent 55%),
-        radial-gradient(900px 600px at 50% 120%, rgba(255, 200, 87, 0.06), transparent 60%),
+        radial-gradient(1200px 600px at 12% -8%,  rgba(94,179,255,0.10),  transparent 60%),
+        radial-gradient(1000px 700px at 105% 10%,  rgba(192,132,252,0.08), transparent 55%),
+        radial-gradient(900px  600px at 50%  120%, rgba(255,200,87,0.06),  transparent 60%),
         linear-gradient(170deg, var(--bg-2) 0%, var(--bg-1) 100%);
       background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
-      padding: 1.1rem;
+      padding: 0.9rem;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      padding-bottom: 4rem; /* room for ticker */
+      gap: 0.7rem;
+      padding-bottom: 3.4rem;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── HEADER ────────────────────────────────────────── */
+    /* ── HEADER ─────────────────────────────────────────────── */
     header {
-      background: var(--surface);
+      background: var(--surf);
       backdrop-filter: blur(16px) saturate(140%);
       -webkit-backdrop-filter: blur(16px) saturate(140%);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 0.9rem 1.5rem;
+      border-radius: 14px;
+      padding: 0.75rem 1.4rem;
       position: relative;
       overflow: hidden;
       display: grid;
-      grid-template-columns: 1fr 1.6fr 1fr;
-      gap: 1rem;
+      grid-template-columns: auto 1fr;
+      gap: 1.4rem;
       align-items: center;
-      box-shadow: 0 18px 50px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: 0 10px 36px -18px rgba(0,0,0,0.65);
     }
     header::before {
       content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, var(--accent), var(--purple), var(--gold), var(--green));
-      opacity: 0.4;
+      opacity: 0.38;
     }
-
-    .header-left  { display: flex; flex-direction: column; gap: 0.5rem; }
-    .header-right { display: flex; flex-direction: column; gap: 0.5rem; text-align: right; align-items: flex-end; }
 
     #clock {
-      text-align: center;
-      font-family: var(--font-display);
-      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-family: var(--font-d);
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
       font-weight: 300;
-      letter-spacing: 0.01em;
+      letter-spacing: -0.01em;
       line-height: 1;
       font-variant-numeric: tabular-nums;
-      background: linear-gradient(180deg, #ffe2a3 0%, var(--gold) 55%, #f0a93c 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
+      background: linear-gradient(180deg, #ffe2a3 0%, var(--gold) 58%, #f0a93c 100%);
+      -webkit-background-clip: text; background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 2px 10px rgba(255, 200, 87, 0.18));
+      filter: drop-shadow(0 2px 10px rgba(255,200,87,0.18));
+      white-space: nowrap;
     }
     .clock-ampm {
-      font-size: 0.32em;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      margin-left: 0.35em;
-      vertical-align: 0.45em;
-      -webkit-text-fill-color: var(--muted);
-      filter: none;
-    }
-    #greeting { display: none; }
-
-    #date-display {
-      font-family: var(--font-display);
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--sky);
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-    #moon-display {
-      font-size: 0.75rem;
-      color: var(--muted);
+      font-size: 0.3em; font-weight: 500; letter-spacing: 0.06em;
+      margin-left: 0.28em; vertical-align: 0.46em;
+      -webkit-text-fill-color: var(--muted); filter: none;
     }
 
-    .location-tag {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--gold);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      padding: 0.28rem 0.7rem;
-      border: 1px solid rgba(255, 200, 87, 0.25);
-      border-radius: 999px;
-      background: rgba(255, 200, 87, 0.07);
+    .hdr-right { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+
+    .hdr-meta {
+      display: flex; align-items: center; gap: 0.42rem;
+      flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); line-height: 1.4;
     }
+    .hdr-meta .sep { color: var(--bhi); user-select: none; font-size: 0.7rem; }
+    #date-display  { color: var(--sky); font-weight: 600; font-family: var(--font-d); letter-spacing: 0.02em; }
+    #wx-garment-s  { color: var(--gold); font-weight: 600; }
+
     #wisdom {
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-style: italic;
-      line-height: 1.5;
-      max-width: 220px;
-      text-align: right;
+      font-size: 0.68rem; color: var(--muted);
+      font-style: italic; opacity: 0.55; line-height: 1.4;
       transition: opacity 0.6s;
     }
 
-    /* ── GRIDS ─────────────────────────────────────────── */
-    .grid-3 {
-      display: grid;
-      grid-template-columns: 2fr 2.5fr 1.4fr;
-      gap: 1rem;
-    }
-    .grid-4 {
-      display: grid;
-      grid-template-columns: 1fr 1.4fr 1.4fr 1fr;
-      gap: 1rem;
-    }
-
-    /* ── TABLET  600–900px ─────────────────────────────── */
-    @media (max-width: 900px) {
-      .grid-3 { grid-template-columns: 1fr 1fr; }
-      .grid-4 { grid-template-columns: 1fr 1fr; }
-      /* Calendar drops to full-width below trains on tablet */
-      .grid-3 > .card:last-child { grid-column: 1 / -1; }
-    }
-
-    /* ── MOBILE  <600px ────────────────────────────────── */
-    @media (max-width: 599px) {
-      body {
-        padding: 0.6rem;
-        gap: 0.6rem;
-        padding-bottom: 3.2rem;
-      }
-
-      /* Header: clock row + date/info row */
-      header {
-        grid-template-columns: 1fr;
-        padding: 1rem 1.1rem 0.9rem;
-        gap: 0.4rem;
-        text-align: center;
-      }
-      .header-left {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        order: 2;
-      }
-      header > div:nth-child(2) { order: 1; } /* clock on top */
-      .header-right {
-        order: 3;
-        align-items: center;
-        text-align: center;
-      }
-      .location-tag { display: none; }
-      #wisdom { max-width: 100%; text-align: center; font-size: 0.74rem; }
-      #date-display { font-size: 0.9rem; }
-      #greeting { font-size: 0.82rem; }
-
-      /* Cards: single column, tighter padding */
-      .grid-3, .grid-4 { grid-template-columns: 1fr; gap: 0.6rem; }
-      .card { padding: 0.85rem 1rem; gap: 0.55rem; border-radius: 10px; }
-
-      /* Weather: hide tomorrow on smallest screens to save space */
-      .wx-tomorrow { display: none; }
-      .wx-icon { font-size: 2.2rem; }
-      .wx-temp { font-size: 2.1rem; }
-
-      /* Trains / buses: slightly more compact */
-      .dep-row { padding: 0.55rem 0.65rem; }
-      .bus-row  { padding: 0.55rem 0.65rem; }
-
-      /* News: bigger tap targets for touch */
-      .news-item { padding: 0.65rem 0; }
-      .news-headline { font-size: 0.92rem; }
-
-      /* Ticker: slightly taller for thumbs */
-      #ticker-bar { height: 3rem; }
-      #ticker-content { font-size: 0.85rem; }
-    }
-
-    /* ── VERY SMALL  <380px ────────────────────────────── */
-    @media (max-width: 379px) {
-      #clock { font-size: 3rem; }
-      .dep-plat { display: none; }
-      .bus-approx { display: none; }
-    }
-
-    /* ── iPHONE 16 PRO — no-scroll at-a-glance ──────────
-       Target: 393 × ~796 dvh. Everything visible, no scroll.
-    ──────────────────────────────────────────────────── */
-    @media (max-width: 430px) {
-      body {
-        min-height: 0;
-        height: 100dvh;
-        overflow: hidden;
-        overscroll-behavior: none;
-        background-attachment: scroll;
-        padding: 0.45rem;
-        padding-bottom: 2.55rem; /* room for ticker */
-        gap: 0.42rem;
-      }
-
-      /* Header: compact 2-col — date/moon left, clock right */
-      header {
-        flex-shrink: 0;
-        grid-template-columns: auto 1fr;
-        padding: 0.5rem 0.85rem;
-        gap: 0.55rem;
-        border-radius: 12px;
-        align-items: center;
-      }
-      /* Reset order overrides from 599px block */
-      .header-left  { order: 0; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.2rem; }
-      header > div:nth-child(2) { order: 0; text-align: left; }
-      .header-right { display: none; }
-      #clock        { font-size: 2.5rem; text-align: left; }
-      #date-display { font-size: 0.75rem; }
-      #moon-display { font-size: 0.68rem; }
-      #greeting     { font-size: 0.7rem; margin-top: 0.08rem; }
-
-      /* Row 1 — Weather + Trains side by side; Calendar hidden */
-      .grid-3 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr;
-        gap: 0.42rem;
-        flex: 1.5;
-        min-height: 0;
-      }
-      .grid-3 > .card:last-child { display: none; }
-
-      /* Row 2 — Buses · Brum · UK · Sport in 2×2 */
-      .grid-4 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
-        gap: 0.42rem;
-        flex: 1;
-        min-height: 0;
-      }
-
-      /* Cards: tight padding, clip overflow */
-      .card {
-        padding: 0.48rem 0.6rem;
-        gap: 0.28rem;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-      .card-title     { font-size: 0.59rem; gap: 0.35rem; }
-      .card-title .dot{ width: 6px; height: 6px; }
-
-      /* Weather */
-      .wx-icon  { font-size: 1.9rem; }
-      .wx-desc  { font-size: 0.75rem; }
-      .wx-garment { font-size: 1.15rem; gap: 0.45rem; }
-      .wx-garment-icon { font-size: 1.25rem; }
-
-      /* Trains — first 3 only, no platform */
-      .dep-row  { padding: 0.36rem 0.48rem; font-size: 0.77rem; border-radius: 7px; }
-      .dep-time { min-width: 2.5rem; }
-      .dep-plat { display: none; }
-      #trains-wrap .dep-row:nth-child(n+4) { display: none; }
-
-      /* Buses — first 3 only, no approx */
-      .bus-row  { padding: 0.36rem 0.48rem; font-size: 0.77rem; border-radius: 7px; }
-      .bus-time { min-width: 2.5rem; }
-      .bus-approx { display: none; }
-      #buses-wrap .bus-row:nth-child(n+4) { display: none; }
-
-      /* News — 2 headlines per panel */
-      .news-item     { padding: 0.32rem 0; min-height: 0; }
-      .news-item:nth-child(n+3) { display: none; }
-      .news-headline { font-size: 0.79rem; line-height: 1.3; }
-      .news-time     { display: none; }
-      .news-num      { font-size: 0.63rem; }
-
-      /* Calendar (hidden but keep compact if shown) */
-      .cal-event       { padding: 0.38rem 0.5rem; margin-bottom: 0.25rem; }
-      .cal-event-title { font-size: 0.79rem; }
-      .cal-setup       { font-size: 0.7rem; padding: 0.45rem 0.6rem; }
-      .section-label   { font-size: 0.58rem; margin-top: 0.25rem; margin-bottom: 0.2rem; }
-
-      /* Hide non-essential noise */
-      .updated-note { display: none; }
-
-      /* Ticker — slightly slimmer */
-      #ticker-bar     { height: 2.25rem; }
-      #ticker-label   { font-size: 0.61rem; padding: 0 0.65rem; }
-      #ticker-content { font-size: 0.74rem; }
-    }
-
-    /* ── CARD BASE ─────────────────────────────────────── */
-    .card {
-      background: var(--surface);
-      backdrop-filter: blur(14px) saturate(140%);
-      -webkit-backdrop-filter: blur(14px) saturate(140%);
+    /* ── PANELS ─────────────────────────────────────────────── */
+    .panel {
+      background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.2rem 1.35rem;
+      border-radius: 12px;
+      padding: 0.68rem 0.88rem;
       display: flex;
       flex-direction: column;
-      gap: 0.8rem;
-      box-shadow: 0 16px 40px -24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
-      transition: transform 0.2s ease, border-color 0.2s ease;
+      gap: 0.42rem;
+      min-width: 0;
+      overflow: hidden;
     }
-    .card:hover { border-color: var(--border-2); transform: translateY(-2px); }
-    .card-title {
-      font-family: var(--font-display);
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
+
+    .plabel {
+      font-family: var(--font-d);
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 0.38rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    .card-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
-    .card-title .dot {
-      width: 8px; height: 8px; border-radius: 50%;
+    .plabel .dot {
+      width: 5px; height: 5px; border-radius: 50%;
       background: currentColor; flex-shrink: 0;
-      box-shadow: 0 0 10px currentColor;
+      box-shadow: 0 0 6px currentColor;
     }
 
-    /* ── WEATHER ───────────────────────────────────────── */
-    .wx-current { display: flex; align-items: center; gap: 1rem; }
-    .wx-icon { font-size: 2.9rem; line-height: 1; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
-    .wx-temp {
-      font-family: var(--font-display);
-      font-size: 2.7rem; font-weight: 500; line-height: 1;
-      background: linear-gradient(180deg, #ffe2a3, var(--gold));
-      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .wx-desc { font-size: 0.9rem; color: var(--muted); }
-    .wx-garment {
-      display: flex; align-items: center; gap: 0.6rem;
-      font-family: var(--font-display);
-      font-size: 1.5rem; font-weight: 600; color: var(--gold);
-      letter-spacing: 0.01em;
-    }
-    .wx-garment-icon { font-size: 1.6rem; }
-    .wx-quip {
-      font-size: 0.82rem; color: var(--text); font-style: italic;
-      padding: 0.7rem 0.95rem; background: var(--surface2);
-      border-radius: 10px; border-left: 3px solid var(--gold);
-      line-height: 1.5;
-    }
-    .wx-tomorrow { margin-top: 0.25rem; }
-    .wx-tmr-label {
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
-    }
-    .wx-hourly { display: flex; flex-direction: column; gap: 0.25rem; }
-    .wx-hour {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-size: 0.8rem; padding: 0.2rem 0;
-    }
-    .wx-hour-time { color: var(--muted); width: 3.5rem; flex-shrink: 0; }
-    .wx-hour-temp { color: var(--orange); width: 3rem; flex-shrink: 0; font-weight: 600; }
-    .wx-hour-desc { color: var(--text); flex: 1; }
-    .wx-hour-rain { color: var(--accent); font-size: 0.75rem; }
+    /* ── LAYOUT ROWS ────────────────────────────────────────── */
+    .transport-row { display: flex; gap: 0.7rem; }
+    .panel-trains  { flex: 1.8; }
+    .panel-buses   { flex: 1; }
 
-    /* ── TRAINS ────────────────────────────────────────── */
+    .news-row { display: flex; gap: 0.7rem; }
+    .news-row .panel { flex: 1; }
+
+    /* ── TRAINS ─────────────────────────────────────────────── */
     .dep-row {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.6rem 0.8rem; background: var(--surface2);
+      display: flex; align-items: center; gap: 0.48rem;
+      padding: 0.4rem 0.55rem;
+      background: var(--row2);
       border: 1px solid transparent;
-      border-radius: 10px; font-size: 0.85rem;
-      transition: border-color 0.15s, background 0.15s;
+      border-radius: 8px; font-size: 0.83rem;
+      transition: border-color 0.15s;
     }
-    .dep-row:hover { border-color: rgba(94,179,255,0.25); background: rgba(94,179,255,0.06); }
-    .dep-time { font-family: var(--font-display); font-weight: 600; min-width: 3rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+    .dep-row:hover { border-color: rgba(94,179,255,0.2); }
+    .dep-time { font-family: var(--font-d); font-weight: 600; min-width: 2.8rem; font-variant-numeric: tabular-nums; color: var(--accent); }
     .dep-dest { flex: 1; }
-    .dep-plat { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
-    .dep-status-ok  { color: var(--green);  font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
-    .dep-status-del { color: var(--yellow); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
-    .dep-status-can { color: var(--red);    font-size: 0.78rem; font-weight: 600; white-space: nowrap; text-decoration: line-through; }
+    .dep-ok  { color: var(--green);  font-size: 0.75rem; }
+    .dep-del { color: var(--yellow); font-size: 0.75rem; font-weight: 600; }
+    .dep-can { color: var(--red);    font-size: 0.75rem; font-weight: 600; }
 
-    /* ── BUSES ─────────────────────────────────────────── */
+    /* ── BUSES ──────────────────────────────────────────────── */
     .bus-row {
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.6rem 0.8rem; background: var(--surface2);
+      display: flex; align-items: center; gap: 0.48rem;
+      padding: 0.4rem 0.55rem;
+      background: var(--row2);
       border: 1px solid transparent;
-      border-radius: 10px; font-size: 0.83rem;
-      transition: border-color 0.15s, background 0.15s;
+      border-radius: 8px; font-size: 0.83rem;
+      transition: border-color 0.15s;
     }
-    .bus-row:hover { border-color: rgba(192,132,252,0.25); background: rgba(192,132,252,0.06); }
+    .bus-row:hover { border-color: rgba(192,132,252,0.2); }
     .bus-badge {
-      font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.55rem;
-      border-radius: 7px; min-width: 2.4rem; text-align: center; flex-shrink: 0;
-      background: rgba(192,132,252,0.16); color: var(--purple);
-      border: 1px solid rgba(192,132,252,0.35);
+      font-size: 0.68rem; font-weight: 800; padding: 0.14rem 0.44rem;
+      border-radius: 5px; min-width: 2.1rem; text-align: center; flex-shrink: 0;
+      background: rgba(192,132,252,0.12); color: var(--purple);
+      border: 1px solid rgba(192,132,252,0.28);
     }
-    .bus-time { font-family: var(--font-display); font-weight: 600; color: var(--text); min-width: 3rem; font-variant-numeric: tabular-nums; }
-    .bus-dest { flex: 1; color: var(--muted); }
-    .bus-approx { font-size: 0.72rem; color: var(--muted); }
+    .bus-time { font-family: var(--font-d); font-weight: 600; color: var(--text); min-width: 2.8rem; font-variant-numeric: tabular-nums; }
+    .bus-dest { flex: 1; color: var(--muted); font-size: 0.8rem; }
 
-    /* ── NEWS ──────────────────────────────────────────── */
+    /* ── NEWS ───────────────────────────────────────────────── */
     .news-item {
-      display: flex; gap: 0.5rem; padding: 0.55rem 0;
+      display: flex; gap: 0.4rem; padding: 0.42rem 0;
       border-bottom: 1px solid var(--border);
       text-decoration: none; color: var(--text);
       transition: color 0.15s; align-items: flex-start;
-      min-height: 44px; /* touch target */
     }
     .news-item:last-child { border-bottom: none; padding-bottom: 0; }
     .news-item:hover { color: var(--accent); }
-    .news-num {
-      font-family: var(--font-display);
-      font-size: 0.7rem; font-weight: 600; color: var(--accent);
-      padding-top: 0.1rem; min-width: 1.1rem;
-    }
-    .news-headline { font-size: 0.86rem; line-height: 1.45; font-weight: 500; }
-    .news-time { font-size: 0.7rem; color: var(--muted); margin-top: 0.12rem; }
+    .news-num { font-family: var(--font-d); font-size: 0.63rem; font-weight: 700; color: var(--accent); padding-top: 0.14rem; min-width: 0.95rem; }
+    .news-headline { font-size: 0.82rem; line-height: 1.38; font-weight: 500; }
 
-    /* ── CALENDAR ──────────────────────────────────────── */
-    .cal-event {
-      padding: 0.6rem 0.9rem; background: var(--surface2);
-      border-radius: 10px; border-left: 3px solid var(--gold);
-      margin-bottom: 0.45rem;
-    }
-    .cal-event-time { font-size: 0.72rem; color: var(--muted); }
-    .cal-event-title { font-size: 0.88rem; font-weight: 500; margin-top: 0.1rem; }
-    .cal-setup {
-      padding: 0.8rem 0.9rem; background: var(--surface2);
-      border-radius: 7px; font-size: 0.8rem; color: var(--muted);
-      line-height: 1.65; border: 1px dashed var(--border);
-    }
-    .cal-setup code {
-      background: var(--bg-1); padding: 0.1rem 0.35rem;
-      border-radius: 3px; color: var(--accent); font-size: 0.75rem;
-    }
-
-    /* ── MUSIC TICKER ──────────────────────────────────── */
+    /* ── TICKER ─────────────────────────────────────────────── */
     #ticker-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: 2.7rem;
-      background: rgba(10, 12, 22, 0.82);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(244,114,182,0.28);
-      box-shadow: 0 -8px 30px -10px rgba(244,114,182,0.18);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      z-index: 50;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 2.5rem;
+      background: rgba(10,12,22,0.86);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(244,114,182,0.22);
+      box-shadow: 0 -6px 24px -8px rgba(244,114,182,0.14);
+      overflow: hidden; display: flex; align-items: center; z-index: 50;
     }
     #ticker-label {
-      flex-shrink: 0;
-      padding: 0 1rem;
-      font-family: var(--font-display);
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--pink);
-      border-right: 1px solid rgba(244,114,182,0.28);
-      white-space: nowrap;
-      text-shadow: 0 0 12px rgba(244,114,182,0.5);
+      flex-shrink: 0; padding: 0 0.9rem;
+      font-family: var(--font-d); font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--pink);
+      border-right: 1px solid rgba(244,114,182,0.22); white-space: nowrap;
     }
     #ticker-track { flex: 1; overflow: hidden; position: relative; height: 100%; }
     #ticker-content {
-      position: absolute;
-      white-space: nowrap;
-      font-size: 0.82rem;
-      color: var(--text);
-      top: 50%;
-      left: 0;
-      will-change: transform;
-      transform: translate(0, -50%);
+      position: absolute; white-space: nowrap; font-size: 0.78rem;
+      color: var(--text); top: 50%; left: 0;
+      will-change: transform; transform: translate(0,-50%);
       animation: ticker-scroll linear infinite;
     }
-    #ticker-content .t-sep { color: var(--pink); margin: 0 0.7rem; }
+    #ticker-content .t-sep { color: var(--pink); margin: 0 0.65rem; }
     @keyframes ticker-scroll {
-      from { transform: translate(0, -50%); }
-      to   { transform: translate(-50%, -50%); }
+      from { transform: translate(0,-50%); }
+      to   { transform: translate(-50%,-50%); }
     }
 
-    /* ── LOADING / ERROR ───────────────────────────────── */
-    .loading { color: var(--muted); font-size: 0.85rem; font-style: italic; animation: pulse 1.4s ease-in-out infinite; }
-    .err { color: var(--red); font-size: 0.82rem; }
-    .quip-wrap { padding: 0.5rem 0.1rem; }
-    .quip-main { font-size: 0.9rem; font-weight: 600; color: var(--yellow); }
-    .quip-sub  { font-size: 0.82rem; color: var(--muted); font-style: italic; margin-top: 0.25rem; }
-    .empty-note { font-size: 0.85rem; color: var(--green); }
+    /* ── STATE ──────────────────────────────────────────────── */
+    .loading { color: var(--muted); font-size: 0.8rem; font-style: italic; animation: pulse 1.4s ease-in-out infinite; }
+    .quip-main { font-size: 0.85rem; font-weight: 600; color: var(--yellow); }
+    .quip-sub  { font-size: 0.76rem; color: var(--muted); font-style: italic; margin-top: 0.2rem; }
+    .empty-note { font-size: 0.82rem; color: var(--lime); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-    /* ── MISC ──────────────────────────────────────────── */
-    .updated-note { font-size: 0.67rem; color: var(--muted); opacity: 0.5; text-align: right; margin-top: 0.3rem; }
-    .section-label {
-      font-family: var(--font-display);
-      font-size: 0.67rem; font-weight: 600; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem;
-      margin-top: 0.6rem;
+    /* ── TABLET  601–900 ────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .transport-row { flex-wrap: wrap; }
+      .panel-trains, .panel-buses { flex: 1 1 45%; }
+      .news-row { flex-wrap: wrap; }
+      .news-row .panel { flex: 1 1 30%; }
     }
-    .section-label:first-child { margin-top: 0; }
+
+    /* ── iPHONE 16 PRO — no-scroll ─────────────────────────── */
+    @media (max-width: 430px) {
+      body {
+        min-height: 0; height: 100dvh; overflow: hidden;
+        overscroll-behavior: none; background-attachment: scroll;
+        padding: 0.42rem; padding-bottom: 2.45rem; gap: 0.38rem;
+      }
+
+      header {
+        flex-shrink: 0;
+        padding: 0.48rem 0.85rem; gap: 0.75rem;
+        border-radius: 11px;
+      }
+      #clock { font-size: 2.25rem; }
+      .hdr-meta { font-size: 0.7rem; gap: 0.3rem; }
+      #wisdom { font-size: 0.6rem; }
+
+      .transport-row { flex: 1.5; min-height: 0; gap: 0.38rem; }
+      .panel-trains  { flex: 1.8; }
+      .panel-buses   { flex: 1; }
+
+      .news-row { flex: 1; min-height: 0; gap: 0.38rem; }
+      .news-row .panel { flex: 1; }
+
+      .panel { padding: 0.4rem 0.52rem; gap: 0.26rem; border-radius: 9px; }
+      .plabel { font-size: 0.54rem; padding-bottom: 0.2rem; }
+      .plabel .dot { width: 4px; height: 4px; }
+
+      .dep-row, .bus-row { padding: 0.3rem 0.42rem; font-size: 0.76rem; border-radius: 7px; }
+      .dep-time, .bus-time { min-width: 2.3rem; }
+      #trains-wrap .dep-row:nth-child(n+4) { display: none; }
+      #buses-wrap  .bus-row:nth-child(n+4) { display: none; }
+
+      .news-item { padding: 0.26rem 0; }
+      .news-item:nth-child(n+3) { display: none; }
+      .news-headline { font-size: 0.74rem; line-height: 1.26; }
+      .news-num { font-size: 0.58rem; }
+
+      #ticker-bar     { height: 2.15rem; }
+      #ticker-label   { font-size: 0.57rem; padding: 0 0.6rem; }
+      #ticker-content { font-size: 0.7rem; }
+    }
   </style>
 </head>
 <body>
 
-<!-- ── HEADER ─────────────────────────────────────────── -->
+<!-- ── HEADER ───────────────────────────────────────────────── -->
 <header>
-  <div class="header-left">
-    <div id="date-display">—</div>
-    <div id="moon-display">—</div>
-  </div>
-  <div>
-    <div id="clock">00:00:00</div>
-    <div id="greeting"></div>
-  </div>
-  <div class="header-right">
-    <div class="location-tag">Kings Norton · B38</div>
+  <div id="clock">00:00<span class="clock-ampm">am</span></div>
+  <div class="hdr-right">
+    <div class="hdr-meta">
+      <span id="date-display">—</span>
+      <span class="sep">·</span>
+      <span id="moon-display">—</span>
+      <span class="sep">·</span>
+      <span id="wx-icon-s"></span><span id="wx-cond-s">—</span>
+      <span class="sep">·</span>
+      <span id="wx-garment-s">—</span>
+    </div>
     <div id="wisdom"></div>
   </div>
 </header>
 
-<!-- ── ROW 1: Weather | Trains | Calendar ─────────────── -->
-<div class="grid-3">
-
-  <div class="card">
-    <div class="card-title" style="color:var(--orange)"><span class="dot" style="background:var(--orange)"></span>Birmingham Weather</div>
-    <div id="weather-wrap"><span class="loading">Fetching weather…</span></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span>Trains → Birmingham</div>
+<!-- ── TRANSPORT ─────────────────────────────────────────────── -->
+<div class="transport-row">
+  <div class="panel panel-trains">
+    <div class="plabel" style="color:var(--green)"><span class="dot"></span>Trains to Birmingham</div>
     <div id="trains-wrap"><span class="loading">Loading departures…</span></div>
   </div>
-
-  <div class="card">
-    <div class="card-title" style="color:var(--accent)"><span class="dot" style="background:var(--accent)"></span>Calendar</div>
-    <div id="cal-wrap"><span class="loading">Loading calendar…</span></div>
-  </div>
-
-</div>
-
-<!-- ── ROW 2: Buses | Brum | UK News | Sport ──────────── -->
-<div class="grid-4">
-
-  <div class="card">
-    <div class="card-title" style="color:var(--purple)"><span class="dot" style="background:var(--purple)"></span>Buses 45 &middot; 49</div>
+  <div class="panel panel-buses">
+    <div class="plabel" style="color:var(--purple)"><span class="dot"></span>Buses 45 · 49</div>
     <div id="buses-wrap"></div>
   </div>
-
-  <div class="card">
-    <div class="card-title" style="color:var(--orange)"><span class="dot" style="background:var(--orange)"></span>Birmingham</div>
-    <div id="brum-wrap"><span class="loading">Loading…</span></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title" style="color:var(--sky)"><span class="dot" style="background:var(--sky)"></span>UK News</div>
-    <div id="news-wrap"><span class="loading">Loading…</span></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title" style="color:var(--chartreuse)"><span class="dot" style="background:var(--chartreuse)"></span>Sport</div>
-    <div id="sport-wrap"><span class="loading">Loading…</span></div>
-  </div>
-
 </div>
 
-<!-- ── MUSIC TICKER ────────────────────────────────────── -->
+<!-- ── NEWS ──────────────────────────────────────────────────── -->
+<div class="news-row">
+  <div class="panel">
+    <div class="plabel" style="color:var(--orange)"><span class="dot"></span>Birmingham</div>
+    <div id="brum-wrap"><span class="loading">Loading…</span></div>
+  </div>
+  <div class="panel">
+    <div class="plabel" style="color:var(--sky)"><span class="dot"></span>UK</div>
+    <div id="news-wrap"><span class="loading">Loading…</span></div>
+  </div>
+  <div class="panel">
+    <div class="plabel" style="color:var(--lime)"><span class="dot"></span>Sport</div>
+    <div id="sport-wrap"><span class="loading">Loading…</span></div>
+  </div>
+</div>
+
+<!-- ── MUSIC TICKER ──────────────────────────────────────────── -->
 <div id="ticker-bar">
   <div id="ticker-label">&#9834; Music</div>
   <div id="ticker-track">
@@ -607,58 +337,46 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-//  CLOCK + GREETING
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════════════
 const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
 
 function pad(n) { return String(n).padStart(2,'0'); }
 
-function greeting(h) {
-  if (h >= 5  && h < 12) return 'Good morning';
-  if (h >= 12 && h < 17) return 'Good afternoon';
-  if (h >= 17 && h < 21) return 'Good evening';
-  return "You're up late";
-}
-
 function tick() {
   const n = new Date(), h = n.getHours();
+  const h12 = h % 12 || 12;
   const ampm = h >= 12 ? 'pm' : 'am';
-  const h12  = h % 12 || 12;
   document.getElementById('clock').innerHTML =
     `${h12}:${pad(n.getMinutes())}<span class="clock-ampm">${ampm}</span>`;
   document.getElementById('date-display').textContent =
     `${DAYS[n.getDay()].slice(0,3).toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].slice(0,3).toUpperCase()}`;
-  document.getElementById('greeting').textContent = greeting(h);
   updateMoon(n);
 }
 tick(); setInterval(tick, 1000);
 
-// ═══════════════════════════════════════════════════════════
-//  MOON PHASE
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  MOON
+// ═══════════════════════════════════════════════════════════════
 function getMoonPhase(d) {
-  const known   = new Date(2000, 0, 6);
-  const diff    = (d - known) / 86400000;
-  const phase   = ((diff % 29.53) + 29.53) % 29.53;
-  const names   = ['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous',
-                   'Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
-  const emojis  = ['🌑','🌒','🌓','🌔',
-                   '🌕','🌖','🌗','🌘'];
+  const diff  = (d - new Date(2000,0,6)) / 86400000;
+  const phase = ((diff % 29.53) + 29.53) % 29.53;
+  const names  = ['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous',
+                  'Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+  const emojis = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
   const i = Math.floor(phase / 29.53 * 8);
-  return { name: names[i], emoji: emojis[i] };
+  return `${emojis[i]} ${names[i]}`;
 }
-
 function updateMoon(d) {
-  const m = getMoonPhase(d);
-  document.getElementById('moon-display').textContent = `${m.emoji}  ${m.name}`;
+  document.getElementById('moon-display').textContent = getMoonPhase(d);
 }
 
-// ═══════════════════════════════════════════════════════════
-//  WISDOM TICKER
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  WISDOM
+// ═══════════════════════════════════════════════════════════════
 const WISDOMS = [
   "Kings Norton: est. 7th century. Tesco: 2003.",
   "The 49 will come. Eventually. In its own time.",
@@ -675,124 +393,67 @@ let _wi = 0;
 function nextWisdom() {
   const el = document.getElementById('wisdom');
   el.style.opacity = 0;
-  setTimeout(() => {
-    el.textContent = WISDOMS[_wi++ % WISDOMS.length];
-    el.style.opacity = 1;
-  }, 600);
+  setTimeout(() => { el.textContent = WISDOMS[_wi++ % WISDOMS.length]; el.style.opacity = 1; }, 600);
 }
 nextWisdom(); setInterval(nextWisdom, 30000);
 
-// ═══════════════════════════════════════════════════════════
-//  WEATHER — Open-Meteo (free, no key, confirmed CORS)
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  WEATHER — Open-Meteo → header meta line
+// ═══════════════════════════════════════════════════════════════
 const WX_URL = 'https://api.open-meteo.com/v1/forecast'
   + '?latitude=52.4862&longitude=-1.8904'
-  + '&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,relative_humidity_2m'
-  + '&daily=weathercode,temperature_2m_max,temperature_2m_min'
-  + '&hourly=temperature_2m,precipitation_probability,weathercode'
-  + '&wind_speed_unit=mph&timezone=Europe%2FLondon&forecast_days=2';
+  + '&current=apparent_temperature,weathercode'
+  + '&timezone=Europe%2FLondon';
 
-const WX_QUIPS = {
-  clear: ["Genuinely nice out. Don't waste it.", "Sun's out. Birmingham looks almost attractive."],
-  cloud: ["Classic Brummie sky.", "Could be worse. Could be raining."],
-  rain:  ["Classic.", "It's grim up the Midlands.", "Wet. Very wet."],
-  storm: ["Absolutely biblical out there.", "Stay in. Seriously."],
-  snow:  ["Snow in Birmingham. Chaos incoming.", "One inch. City grinds to a halt."],
-};
-
-function wmoIcon(code) {
-  const c = parseInt(code);
-  if (c === 0)          return { i: '☀',  label: 'Clear sky' };
-  if (c <= 2)           return { i: '⛅',  label: 'Partly cloudy' };
-  if (c === 3)          return { i: '☁',  label: 'Overcast' };
-  if (c <= 49)          return { i: '🌫',  label: 'Foggy' };
-  if (c <= 55)          return { i: '🌦',  label: 'Drizzle' };
-  if (c <= 67)          return { i: '🌧',  label: 'Rain' };
-  if (c <= 77)          return { i: '🌨',  label: 'Snow' };
-  if (c <= 82)          return { i: '🌧',  label: 'Rain showers' };
-  if (c <= 86)          return { i: '🌨',  label: 'Snow showers' };
-  if (c === 95)         return { i: '⛈',  label: 'Thunderstorm' };
-  if (c <= 99)          return { i: '⛈',  label: 'Thunder & hail' };
-  return { i: '🌤', label: 'Mixed' };
+function wmoIcon(c) {
+  c = parseInt(c);
+  if (c === 0)  return { i:'☀',  l:'Clear' };
+  if (c <= 2)   return { i:'⛅', l:'Partly cloudy' };
+  if (c === 3)  return { i:'☁',  l:'Overcast' };
+  if (c <= 49)  return { i:'🌫', l:'Fog' };
+  if (c <= 55)  return { i:'🌦', l:'Drizzle' };
+  if (c <= 67)  return { i:'🌧', l:'Rain' };
+  if (c <= 77)  return { i:'🌨', l:'Snow' };
+  if (c <= 82)  return { i:'🌧', l:'Showers' };
+  if (c <= 86)  return { i:'🌨', l:'Snow showers' };
+  if (c === 95) return { i:'⛈', l:'Thunderstorm' };
+  if (c <= 99)  return { i:'⛈', l:'Thunder & hail' };
+  return { i:'🌤', l:'Mixed' };
 }
 
-function wxQuip(code) {
-  const c = parseInt(code);
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-  if (c === 0)        return pick(WX_QUIPS.clear);
-  if (c >= 95)        return pick(WX_QUIPS.storm);
-  if (c >= 71 && c <= 77) return pick(WX_QUIPS.snow);
-  if (c >= 51 && c <= 82) return pick(WX_QUIPS.rain);
-  return pick(WX_QUIPS.cloud);
-}
-
-// One-word wear: raincoat / coat / jacket / hoody / t-shirt
 function garmentFor(feelsC, code) {
-  const t = Math.round(feelsC);
-  const c = parseInt(code);
-  if (c >= 51 && c <= 82) return { icon: '🧥', label: 'Raincoat' };  // any rain
-  if (c >= 95)            return { icon: '🧥', label: 'Raincoat' };  // storm
-  if (c >= 71 && c <= 77) return { icon: '🧥', label: 'Coat' };      // snow
-  if (t <= 8)             return { icon: '🧥', label: 'Coat' };
-  if (t <= 14)            return { icon: '🧥', label: 'Jacket' };
-  if (t <= 19)            return { icon: '🧶', label: 'Hoody' };
-  return { icon: '👕', label: 'T-shirt' };
-}
-
-function renderTomorrowHours(times, temps, codes, rainPct) {
-  const tmrDate = new Date(); tmrDate.setDate(tmrDate.getDate() + 1);
-  const tmrStr  = tmrDate.toISOString().slice(0, 10);
-  return times
-    .map((t, i) => ({ t, temp: Math.round(temps[i]), code: codes[i], rain: rainPct[i] }))
-    .filter(h => h.t.startsWith(tmrStr))
-    .filter((_, i) => i % 3 === 0)
-    .slice(0, 4)
-    .map(h => {
-      const icon = wmoIcon(h.code);
-      return `<div class="wx-hour">
-        <span class="wx-hour-time">${h.t.slice(11,16)}</span>
-        <span style="font-size:1rem">${icon.i}</span>
-        <span class="wx-hour-temp">${h.temp}°</span>
-        <span class="wx-hour-desc">${icon.label}</span>
-        ${h.rain > 20 ? `<span class="wx-hour-rain">${h.rain}%</span>` : ''}
-      </div>`;
-    }).join('');
+  const t = Math.round(feelsC), c = parseInt(code);
+  if ((c >= 51 && c <= 82) || c >= 95) return '🧥 Raincoat';
+  if (c >= 71 && c <= 77) return '🧥 Coat';
+  if (t <= 8)  return '🧥 Coat';
+  if (t <= 14) return '🧥 Jacket';
+  if (t <= 19) return '🧶 Hoody';
+  return '👕 T-shirt';
 }
 
 async function fetchWeather() {
-  const wrap = document.getElementById('weather-wrap');
   try {
-    const res  = await fetch(WX_URL);
+    const res = await fetch(WX_URL);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const d    = await res.json();
-    const cur  = d.current;
-    const icon = wmoIcon(cur.weathercode);
-    const wear = garmentFor(cur.apparent_temperature, cur.weathercode);
-    wrap.innerHTML = `
-      <div class="wx-current">
-        <div class="wx-icon">${icon.i}</div>
-        <div class="wx-desc">${icon.label}</div>
-      </div>
-      <div class="wx-garment"><span class="wx-garment-icon">${wear.icon}</span>${wear.label}</div>`;
-  } catch (err) {
-    wrap.innerHTML = `<div class="quip-wrap">
-      <div class="quip-main">Try looking out the window.</div>
-      <div class="quip-sub">Weather unavailable (${err.message})</div>
-    </div>`;
+    const { current: c } = await res.json();
+    const icon = wmoIcon(c.weathercode);
+    document.getElementById('wx-icon-s').textContent    = icon.i + ' ';
+    document.getElementById('wx-cond-s').textContent    = icon.l;
+    document.getElementById('wx-garment-s').textContent = garmentFor(c.apparent_temperature, c.weathercode);
+  } catch {
+    document.getElementById('wx-cond-s').textContent = '—';
   }
 }
 fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 
-// ═══════════════════════════════════════════════════════════
-//  TRAINS — Huxley2 / National Rail
-// ═══════════════════════════════════════════════════════════
-// Reduce a station name to just its town, stripping the station-type suffix.
+// ═══════════════════════════════════════════════════════════════
+//  TRAINS
+// ═══════════════════════════════════════════════════════════════
 function townOf(name) {
   return (name || '')
     .replace(/-upon-Avon/i, '')
     .replace(/\b(New Street|Moor Street|Snow Hill|International|Temple Meads|Foregate Street|Shrub Hill|Parkway|Central|Spa|Street|Road)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+    .replace(/\s+/g, ' ').trim();
 }
 
 async function fetchTrains() {
@@ -802,311 +463,132 @@ async function fetchTrains() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const all  = data.trainServices || [];
-
-    const bhm = all.filter(s => {
+    const bhm  = all.filter(s => {
       const dest = (s.destination || [{}])[0];
-      const via  = dest.via || '';
-      return /Birmingham/i.test(dest.locationName || '') || /Birmingham/i.test(via);
+      return /Birmingham/i.test(dest.locationName || '') || /Birmingham/i.test(dest.via || '');
     });
 
     if (!bhm.length) {
-      wrap.innerHTML = `<div class="quip-wrap">
-        <div class="quip-main">No Birmingham services right now.</div>
-        <div class="quip-sub">Network Rail: working hard, probably.</div>
-      </div>`;
+      wrap.innerHTML = `<div class="quip-main">No Birmingham services right now.</div>`;
       return;
     }
 
-    const rows = bhm.slice(0, 6).map(s => {
-      const destObj  = (s.destination || [{}])[0];
-      const destName = destObj.locationName || '';
-      // Final stop is Birmingham → just "Birmingham"; otherwise it passes through → "via Birmingham"
-      const dest = /Birmingham/i.test(destName) ? townOf(destName) : 'via Birmingham';
+    wrap.innerHTML = bhm.slice(0, 6).map(s => {
+      const destName = (s.destination || [{}])[0].locationName || '';
+      const dest  = /Birmingham/i.test(destName) ? townOf(destName) : 'via Birmingham';
       const sched = s.std || '??:??';
       const etd   = s.etd || '';
-      const plat  = s.platform ? `<span class="dep-plat">Plt ${s.platform}</span>` : '';
       let status;
-      if      (etd === 'On time')   status = `<span class="dep-status-ok">&#9679; On time</span>`;
-      else if (etd === 'Cancelled') status = `<span class="dep-status-can">&#10005; Cancelled</span>`;
-      else if (etd === 'Delayed')   status = `<span class="dep-status-del">&#9650; Delayed</span>`;
-      else                          status = `<span class="dep-status-del">&#8594; ${etd}</span>`;
+      if      (etd === 'On time')   status = `<span class="dep-ok">●</span>`;
+      else if (etd === 'Cancelled') status = `<span class="dep-can">✕</span>`;
+      else if (etd === 'Delayed')   status = `<span class="dep-del">▲</span>`;
+      else                          status = `<span class="dep-del">${etd}</span>`;
       return `<div class="dep-row">
         <span class="dep-time">${sched}</span>
         <span class="dep-dest">${dest}</span>
-        ${plat}
         ${status}
       </div>`;
     }).join('');
-
-    const upd = data.generatedAt ? data.generatedAt.slice(11,16) : '';
-    wrap.innerHTML = rows + `<div class="updated-note">National Rail · updated ${upd}</div>`;
-  } catch (err) {
-    wrap.innerHTML = `<div class="quip-wrap">
-      <div class="quip-main">Huxley's gone for a brew.</div>
-      <div class="quip-sub">Leaves on the line, no doubt. (${err.message})</div>
-    </div>`;
+  } catch (e) {
+    wrap.innerHTML = `<div class="quip-main">Huxley's offline.</div><div class="quip-sub">${e.message}</div>`;
   }
 }
 fetchTrains(); setInterval(fetchTrains, 60*1000);
 
-// ═══════════════════════════════════════════════════════════
-//  BUSES — smart interval timetable
-//  Routes 45 & 49 from Kings Norton (approximate schedule)
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  BUSES
+// ═══════════════════════════════════════════════════════════════
 const BUS_SCHEDULE = {
-  '45': { dest: 'City Centre', interval: 10, first: '05:30', last: '23:15', weekend_interval: 12 },
-  '49': { dest: 'Solihull',    interval: 12, first: '06:00', last: '22:40', weekend_interval: 15 },
+  '45': { dest: 'City Centre', interval: 10, we: 12, first: '05:30', last: '23:15' },
+  '49': { dest: 'Solihull',    interval: 12, we: 15, first: '06:00', last: '22:40' },
 };
 
-function timeToMins(t) {
-  const [h, m] = t.split(':').map(Number); return h*60 + m;
-}
-function minsToTime(m) {
-  return `${pad(Math.floor(m/60) % 24)}:${pad(m % 60)}`;
-}
+function toMins(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+function toTime(m) { return `${pad(Math.floor(m/60)%24)}:${pad(m%60)}`; }
 
 function renderBuses() {
   const wrap = document.getElementById('buses-wrap');
   const now  = new Date();
-  const dow  = now.getDay(); // 0=Sun, 6=Sat
-  const mins = now.getHours()*60 + now.getMinutes();
-  const isWeekend = dow === 0 || dow === 6;
-
-  const allDeps = [];
-  for (const [route, info] of Object.entries(BUS_SCHEDULE)) {
-    const interval = isWeekend ? info.weekend_interval : info.interval;
-    const first    = timeToMins(info.first);
-    const last     = timeToMins(info.last);
-    let dep = first;
-    while (dep <= last) {
-      if (dep >= mins) allDeps.push({ route, time: dep, dest: info.dest });
-      dep += interval;
-    }
+  const cur  = now.getHours()*60 + now.getMinutes();
+  const isWe = now.getDay()===0 || now.getDay()===6;
+  const deps = [];
+  for (const [route, s] of Object.entries(BUS_SCHEDULE)) {
+    const iv = isWe ? s.we : s.interval;
+    let t = toMins(s.first);
+    const last = toMins(s.last);
+    while (t <= last) { if (t >= cur) deps.push({ route, time: t, dest: s.dest }); t += iv; }
   }
-
-  allDeps.sort((a, b) => a.time - b.time);
-  const next = allDeps.slice(0, 6);
-
+  deps.sort((a,b) => a.time - b.time);
+  const next = deps.slice(0, 6);
   if (!next.length) {
-    wrap.innerHTML = `<div class="quip-wrap">
-      <div class="quip-main">The 49 is running on vibes.</div>
-      <div class="quip-sub">No more services today.</div>
-    </div>`;
+    wrap.innerHTML = `<div class="quip-main">No more services today.</div>`;
     return;
   }
-
   wrap.innerHTML = next.map(d => `
     <div class="bus-row">
       <span class="bus-badge">${d.route}</span>
-      <span class="bus-time">${minsToTime(d.time)}</span>
+      <span class="bus-time">${toTime(d.time)}</span>
       <span class="bus-dest">${d.dest}</span>
-      <span class="bus-approx">approx</span>
-    </div>`).join('') + `<div class="updated-note">Based on scheduled timetable · actual times may vary</div>`;
+    </div>`).join('');
 }
 renderBuses(); setInterval(renderBuses, 60*1000);
 
-// ═══════════════════════════════════════════════════════════
-//  RSS — fire 3 CORS proxies simultaneously, take first winner
-// ═══════════════════════════════════════════════════════════
-function makeProxyUrls(rssUrl) {
-  const enc = encodeURIComponent(rssUrl);
+// ═══════════════════════════════════════════════════════════════
+//  RSS — race 3 proxies, take the winner
+// ═══════════════════════════════════════════════════════════════
+function proxyUrls(url) {
+  const enc = encodeURIComponent(url);
   return [
     `https://corsproxy.io/?${enc}`,
     `https://api.allorigins.win/raw?url=${enc}`,
-    `https://api.codetabs.com/v1/proxy?quest=${rssUrl}`,
+    `https://api.codetabs.com/v1/proxy?quest=${url}`,
   ];
 }
 
-async function tryProxy(proxyUrl, count) {
-  const ctrl  = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 6000);
+async function tryProxy(px, count) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
   try {
-    const res = await fetch(proxyUrl, { signal: ctrl.signal });
-    clearTimeout(timer);
+    const res = await fetch(px, { signal: ctrl.signal });
+    clearTimeout(t);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const txt = await res.text();
-    const xml = new DOMParser().parseFromString(txt, 'text/xml');
+    const xml = new DOMParser().parseFromString(await res.text(), 'text/xml');
     if (xml.querySelector('parsererror')) throw new Error('bad xml');
     const items = [...xml.querySelectorAll('item')].slice(0, count);
-    if (!items.length) throw new Error('empty feed');
+    if (!items.length) throw new Error('empty');
     return items.map(el => ({
-      title:   el.querySelector('title')?.textContent?.trim() || '',
-      link:    el.querySelector('link')?.nextSibling?.nodeValue?.trim()
-               || el.querySelector('guid')?.textContent?.trim() || '#',
-      pubDate: el.querySelector('pubDate')?.textContent?.trim() || '',
+      title: el.querySelector('title')?.textContent?.trim() || '',
+      link:  el.querySelector('link')?.nextSibling?.nodeValue?.trim()
+             || el.querySelector('guid')?.textContent?.trim() || '#',
     })).filter(i => i.title && i.title !== '[Removed]');
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
+  } catch(e) { clearTimeout(t); throw e; }
 }
 
-async function fetchRSS(rssUrl, count = 6) {
-  return Promise.any(makeProxyUrls(rssUrl).map(p => tryProxy(p, count)));
+async function fetchRSS(url, count=6) {
+  return Promise.any(proxyUrls(url).map(p => tryProxy(p, count)));
 }
 
-function fmtPub(raw) {
-  if (!raw) return '';
-  try {
-    const d = new Date(raw);
-    const today = new Date();
-    if (d.toDateString() === today.toDateString())
-      return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  } catch { return ''; }
-}
-
-function renderNews(items, limit = 3) {
+function renderNews(items, limit=3) {
   return items.slice(0, limit).map((it, i) => {
     const headline = it.title.replace(/ - BBC.*$/, '').replace(/ \| .*$/, '').trim();
-    const time     = fmtPub(it.pubDate);
     return `<a class="news-item" href="${it.link}" target="_blank" rel="noopener">
-      <span class="news-num">${i + 1}</span>
-      <span>
-        <div class="news-headline">${headline}</div>
-        ${time ? `<div class="news-time">${time}</div>` : ''}
-      </span>
+      <span class="news-num">${i+1}</span>
+      <div class="news-headline">${headline}</div>
     </a>`;
   }).join('');
 }
 
-function showErr(wrapId, quipMain, quipSub) {
-  document.getElementById(wrapId).innerHTML = `<div class="quip-wrap">
-    <div class="quip-main">${quipMain}</div>
-    <div class="quip-sub">${quipSub}</div>
-  </div>`;
-}
-
-async function fetchBrum() {
-  try {
-    const items = await fetchRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml');
-    document.getElementById('brum-wrap').innerHTML = renderNews(items);
-  } catch (e) { showErr('brum-wrap', 'No Brum news.', 'Either very good or very bad sign.'); }
-}
-
-async function fetchNews() {
-  try {
-    const items = await fetchRSS('https://feeds.bbci.co.uk/news/uk/rss.xml');
-    document.getElementById('news-wrap').innerHTML = renderNews(items);
-  } catch (e) { showErr('news-wrap', 'BBC gone quiet.', 'Probably a licence fee dispute.'); }
-}
-
-async function fetchSport() {
-  try {
-    const items = await fetchRSS('https://feeds.bbci.co.uk/sport/rss.xml');
-    document.getElementById('sport-wrap').innerHTML = renderNews(items, 3);
-  } catch (e) { showErr('sport-wrap', 'Sport taking a breather.', 'Must be a rest day.'); }
-}
+async function fetchBrum()  { try { document.getElementById('brum-wrap').innerHTML  = renderNews(await fetchRSS('https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml')); } catch { document.getElementById('brum-wrap').innerHTML  = `<div class="quip-main">No Brum news.</div><div class="quip-sub">Either very good or very bad.</div>`; } }
+async function fetchNews()  { try { document.getElementById('news-wrap').innerHTML  = renderNews(await fetchRSS('https://feeds.bbci.co.uk/news/uk/rss.xml')); }                                catch { document.getElementById('news-wrap').innerHTML  = `<div class="quip-main">BBC gone quiet.</div><div class="quip-sub">Licence fee dispute, probably.</div>`; } }
+async function fetchSport() { try { document.getElementById('sport-wrap').innerHTML = renderNews(await fetchRSS('https://feeds.bbci.co.uk/sport/rss.xml'), 3); }                              catch { document.getElementById('sport-wrap').innerHTML = `<div class="quip-main">Sport on a break.</div><div class="quip-sub">Must be a rest day.</div>`; } }
 
 fetchBrum();  setInterval(fetchBrum,  30*60*1000);
 fetchNews();  setInterval(fetchNews,  30*60*1000);
 fetchSport(); setInterval(fetchSport, 30*60*1000);
 
-// ═══════════════════════════════════════════════════════════
-//  CALENDAR — iCal via /cal proxy (nginx)
-// ═══════════════════════════════════════════════════════════
-function icalUnfold(t) { return t.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,''); }
-
-function icalDate(str) {
-  if (!str) return null;
-  const s = str.replace(/[TZ:\-]/g,'');
-  const y=+s.slice(0,4), m=+s.slice(4,6)-1, d=+s.slice(6,8);
-  return isNaN(y) ? null : new Date(y,m,d);
-}
-
-function parseICal(raw) {
-  const lines = icalUnfold(raw).split(/\r?\n/);
-  const events = []; let e = null;
-  for (const line of lines) {
-    if (line==='BEGIN:VEVENT') { e={}; continue; }
-    if (line==='END:VEVENT')   { if(e) events.push(e); e=null; continue; }
-    if (!e) continue;
-    const ci = line.indexOf(':'); if (ci<0) continue;
-    const prop=line.slice(0,ci), val=line.slice(ci+1), base=prop.split(';')[0].toUpperCase();
-    if (base==='DTSTART') {
-      e.DTSTART=val; e.ALLDAY = prop.toUpperCase().includes('VALUE=DATE') || /^\d{8}$/.test(val);
-    } else { e[base]=val; }
-  }
-  return events;
-}
-
-function occursOn(e, t) {
-  if (!e.DTSTART) return false;
-  const start=icalDate(e.DTSTART); if (!start) return false;
-  const day=new Date(t.getFullYear(),t.getMonth(),t.getDate());
-  if (!e.RRULE) return start.toDateString()===day.toDateString();
-  if (start>day) return false;
-  const rule=Object.fromEntries(e.RRULE.split(';').map(p=>p.split('=')));
-  if (rule.UNTIL && icalDate(rule.UNTIL)<day) return false;
-  const iv=parseInt(rule.INTERVAL||'1');
-  if (rule.FREQ==='DAILY') return Math.round((day-start)/86400000)%iv===0;
-  if (rule.FREQ==='WEEKLY') {
-    const DOW={SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
-    const days=rule.BYDAY?.split(',').map(d=>d.replace(/[+\-\d]/g,''))||null;
-    if (days && !days.some(d=>DOW[d]===day.getDay())) return false;
-    const s0=new Date(start); s0.setDate(s0.getDate()-s0.getDay());
-    const t0=new Date(day);   t0.setDate(t0.getDate()-t0.getDay());
-    return Math.round((t0-s0)/(7*86400000))%iv===0;
-  }
-  if (rule.FREQ==='MONTHLY') return start.getDate()===day.getDate();
-  if (rule.FREQ==='YEARLY')  return start.getMonth()===day.getMonth()&&start.getDate()===day.getDate();
-  return false;
-}
-
-async function fetchCalendar() {
-  const wrap = document.getElementById('cal-wrap');
-  try {
-    const res = await fetch('/cal');
-    if (res.status===404) throw new Error('proxy_not_configured');
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const text = await res.text();
-    if (!text.includes('BEGIN:VCALENDAR')) throw new Error('not_ical');
-    const events = parseICal(text);
-    const today    = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
-    const todayEvs = events.filter(e=>e.ALLDAY && occursOn(e,today));
-    const tmrEvs   = events.filter(e=>e.ALLDAY && occursOn(e,tomorrow));
-
-    let html = '<div class="section-label">Today</div>';
-    if (todayEvs.length) {
-      html += todayEvs.map(e=>`<div class="cal-event">
-        <div class="cal-event-title">&#128197; ${e.SUMMARY||'(no title)'}</div>
-      </div>`).join('');
-    } else {
-      html += '<div class="empty-note">&#10003; Nothing on today</div>';
-    }
-    html += '<div class="section-label" style="margin-top:0.75rem">Tomorrow</div>';
-    if (tmrEvs.length) {
-      html += tmrEvs.map(e=>`<div class="cal-event" style="border-left-color:var(--border);opacity:0.7">
-        <div class="cal-event-title">&#128197; ${e.SUMMARY||'(no title)'}</div>
-      </div>`).join('');
-    } else {
-      html += '<div class="empty-note" style="opacity:0.6">Nothing on tomorrow</div>';
-    }
-    wrap.innerHTML = html;
-  } catch(err) {
-    if (err.message==='proxy_not_configured'||err.message==='not_ical') {
-      wrap.innerHTML = `<div class="cal-setup">
-        <strong>One-time nginx setup:</strong><br><br>
-        <code>location /cal {</code><br>
-        <code>&nbsp;&nbsp;proxy_pass YOUR_ICAL_URL;</code><br>
-        <code>&nbsp;&nbsp;proxy_ssl_server_name on;</code><br>
-        <code>}</code><br><br>
-        See <strong>nginx-calendar-setup.txt</strong> for full instructions.
-      </div>`;
-    } else {
-      wrap.innerHTML = `<div class="quip-wrap">
-        <div class="quip-main">Calendar not connected.</div>
-        <div class="quip-sub">See nginx-calendar-setup.txt</div>
-      </div>`;
-    }
-  }
-}
-fetchCalendar(); setInterval(fetchCalendar, 15*60*1000);
-
-// ═══════════════════════════════════════════════════════════
-//  MUSIC TICKER — CSS-animated marquee, multi-feed fallback
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  MUSIC TICKER
+// ═══════════════════════════════════════════════════════════════
 const MUSIC_FEEDS = [
   'https://www.nme.com/feed/',
   'https://pitchfork.com/rss/news/',
@@ -1117,29 +599,19 @@ const MUSIC_FEEDS = [
 async function fetchMusic() {
   let items = null;
   for (const feed of MUSIC_FEEDS) {
-    try {
-      const got = await fetchRSS(feed, 15);
-      if (got && got.length) { items = got; break; }
-    } catch { /* try next feed */ }
+    try { const g = await fetchRSS(feed, 15); if (g?.length) { items = g; break; } } catch {}
   }
-  const titles = items
-    ? items.map(i => i.title.replace(/ - (NME|BBC).*$/i, '').trim()).filter(Boolean)
-    : ['Music news unavailable right now — will retry shortly'];
-  buildTicker(titles);
+  buildTicker(items
+    ? items.map(i => i.title.replace(/ - (NME|BBC).*$/i,'').trim()).filter(Boolean)
+    : ['Music news unavailable right now']);
 }
 
 function buildTicker(titles) {
   const el = document.getElementById('ticker-content');
   if (!el || !titles.length) return;
-  const seq  = titles.map(t =>
-    `<span>${t}</span><span class="t-sep">&#9834;</span>`
-  ).join('');
-  el.innerHTML = seq + seq; // doubled so -50% translate loops seamlessly
-
-  // Duration scales with content length: ~50px per second
-  const oneWidth = el.scrollWidth / 2;
-  const duration = Math.max(20, Math.round(oneWidth / 50));
-  el.style.animationDuration = duration + 's';
+  const seq = titles.map(t => `<span>${t}</span><span class="t-sep">&#9834;</span>`).join('');
+  el.innerHTML = seq + seq;
+  el.style.animationDuration = Math.max(20, Math.round(el.scrollWidth / 2 / 50)) + 's';
 }
 
 fetchMusic(); setInterval(fetchMusic, 30*60*1000);
