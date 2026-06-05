@@ -345,7 +345,7 @@
 <!-- ── TRANSPORT ─────────────────────────────────────────────── -->
 <div class="transport-row">
   <div class="panel">
-    <div class="plabel" style="color:var(--accent)"><span class="dot"></span>Departures<span class="cal-cog" id="bus-cog">⚙ stops</span></div>
+    <div class="plabel" style="color:var(--accent)"><span class="dot"></span>Departures</div>
     <div id="transport-wrap"><span class="loading">Loading departures…</span></div>
   </div>
 </div>
@@ -561,6 +561,7 @@ async function renderTransport() {
   }
 
   // Trains (live, no cache — refreshes every minute)
+  const trainRows = [];
   try {
     const res  = await fetch('https://huxley2.azurewebsites.net/departures/KNN/12');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -576,13 +577,15 @@ async function renderTransport() {
       else if (etd==='Cancelled') st = `<span class="dep-can">✕</span>`;
       else if (etd==='Delayed')   st = `<span class="dep-del">▲</span>`;
       else                        st = `<span class="dep-del">${etd}</span>`;
-      rows.push({ mins: toMins(sched), _html:
+      trainRows.push({ mins: toMins(sched), _html:
         `<div class="dep-row"><span class="trn-badge">TRN</span><span class="dep-time">${sched}</span><span class="dep-dest">${dest}</span>${st}</div>` });
     });
   } catch {}
 
-  rows.sort((a, b) => a.mins - b.mins);
-  const next = rows.slice(0, 6);
+  // Cap each mode at 3, then merge and sort chronologically
+  const busRows = rows.sort((a, b) => a.mins - b.mins).slice(0, 3);
+  const trnRows = trainRows.sort((a, b) => a.mins - b.mins).slice(0, 3);
+  const next = [...busRows, ...trnRows].sort((a, b) => a.mins - b.mins);
   if (!next.length) { wrap.innerHTML = `<div class="quip-main">No more services today.</div>`; return; }
 
   wrap.innerHTML = next.map(r => {
@@ -593,18 +596,6 @@ async function renderTransport() {
 }
 renderTransport(); setInterval(renderTransport, 60*1000);
 
-// ── Bus stop settings ──────────────────────────────────────────
-document.getElementById('bus-cog').onclick = () => {
-  const a45 = prompt('ATCO code for route 45 stop\n(leave blank to use estimated schedule)', localStorage.getItem('busAtco45') || '');
-  if (a45 === null) return;
-  const a49 = prompt('ATCO code for route 49 stop\n(43000401102 = opp Cadbury College → Rubery)', localStorage.getItem('busAtco49') || '43000401102');
-  if (a49 === null) return;
-  if (a45.trim()) localStorage.setItem('busAtco45', a45.trim()); else localStorage.removeItem('busAtco45');
-  localStorage.setItem('busAtco49', a49.trim() || '43000401102');
-  // Clear stale cache
-  Object.keys(localStorage).filter(k => k.startsWith('busLive_')).forEach(k => localStorage.removeItem(k));
-  renderTransport();
-};
 
 // ═══════════════════════════════════════════════════════════════
 //  RSS — race 3 proxies, take the winner
