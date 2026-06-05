@@ -626,7 +626,7 @@ function tick() {
   const ampm = h >= 12 ? 'pm' : 'am';
   const h12  = h % 12 || 12;
   document.getElementById('clock').innerHTML =
-    `${h12}:${pad(n.getMinutes())}:${pad(n.getSeconds())}<span class="clock-ampm">${ampm}</span>`;
+    `${h12}:${pad(n.getMinutes())}<span class="clock-ampm">${ampm}</span>`;
   document.getElementById('date-display').textContent =
     `${DAYS[n.getDay()].slice(0,3).toUpperCase()}  ${n.getDate()} ${MONTHS[n.getMonth()].slice(0,3).toUpperCase()}`;
   document.getElementById('greeting').textContent = greeting(h);
@@ -792,6 +792,27 @@ fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 // ═══════════════════════════════════════════════════════════
 //  TRAINS — Huxley2 / National Rail
 // ═══════════════════════════════════════════════════════════
+const STATION_ABBR = {
+  'Birmingham New Street':   'Brm New St',
+  'Birmingham Moor Street':  'Brm Moor St',
+  'Birmingham Snow Hill':    'Brm Snow Hl',
+  'Birmingham International': 'Brm Intl',
+  'Bristol Temple Meads':    'Bristol TM',
+  'London Euston':           'London Euston',
+  'Wolverhampton':           'Wolverh’ton',
+  'Worcester Foregate Street':'Worcester FS',
+  'Worcester Shrub Hill':    'Worcester SH',
+  'Stratford-upon-Avon':     'Stratford',
+  'Leamington Spa':          'Leam. Spa',
+};
+function abbrevStation(name) {
+  if (STATION_ABBR[name]) return STATION_ABBR[name];
+  return name
+    .replace(/\bBirmingham\b/, 'Brm')
+    .replace(/\bStreet\b/, 'St')
+    .replace(/\bInternational\b/, 'Intl');
+}
+
 async function fetchTrains() {
   const wrap = document.getElementById('trains-wrap');
   try {
@@ -815,7 +836,7 @@ async function fetchTrains() {
     }
 
     const rows = bhm.slice(0, 6).map(s => {
-      const dest  = (s.destination || [{}])[0].locationName || 'Unknown';
+      const dest  = abbrevStation((s.destination || [{}])[0].locationName || 'Unknown');
       const sched = s.std || '??:??';
       const etd   = s.etd || '';
       const plat  = s.platform ? `<span class="dep-plat">Plt ${s.platform}</span>` : '';
