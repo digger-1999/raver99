@@ -493,7 +493,7 @@ fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 // ═══════════════════════════════════════════════════════════════
 const BUS_SCHEDULE = {
   '45': { dest: 'City Centre', interval: 10, we: 12, first: '05:30', last: '23:15' },
-  '49': { dest: 'Solihull',    interval: 12, we: 15, first: '06:00', last: '22:40' },
+  '49': { dest: 'Rubery',      interval: 12, we: 15, first: '06:00', last: '22:40' },
 };
 
 function toMins(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
