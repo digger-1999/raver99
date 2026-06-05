@@ -345,7 +345,7 @@
 <!-- ── TRANSPORT ─────────────────────────────────────────────── -->
 <div class="transport-row">
   <div class="panel">
-    <div class="plabel" style="color:var(--accent)"><span class="dot"></span>Departures</div>
+    <div class="plabel" style="color:var(--accent)"><span class="dot"></span>Departures<span class="cal-cog" id="bus-cog">⚙ stops</span></div>
     <div id="transport-wrap"><span class="loading">Loading departures…</span></div>
   </div>
 </div>
@@ -489,7 +489,7 @@ async function fetchWeather() {
 fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 
 // ═══════════════════════════════════════════════════════════════
-//  TRANSPORT — trains + buses merged chronologically
+//  TRANSPORT — trains + live buses merged chronologically
 // ═══════════════════════════════════════════════════════════════
 const BUS_SCHEDULE = {
   '45': { dest: 'City Centre', interval: 10, we: 12, first: '05:30', last: '23:15' },
@@ -499,70 +499,112 @@ const BUS_SCHEDULE = {
 function toMins(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
 function toTime(m) { return `${pad(Math.floor(m/60)%24)}:${pad(m%60)}`; }
 
-async function renderTransport() {
-  const wrap = document.getElementById('transport-wrap');
-  const now  = new Date();
-  const cur  = now.getHours()*60 + now.getMinutes();
+// Fetch live departures from Transport API with 1-hour localStorage cache
+async function fetchLiveBuses(atco) {
+  const TTL      = 60 * 60 * 1000;
+  const cacheKey = `busLive_${atco}`;
+  const cached   = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+  if (cached && (Date.now() - cached.ts) < TTL) return cached.deps;
+
+  const appId  = localStorage.getItem('tapiId')  || 'b6829348';
+  const appKey = localStorage.getItem('tapiKey') || 'f20098a220fdcb152f223f363f687c5b';
+  const url    = `https://transportapi.com/v3/uk/bus/stop/${atco}/live.json`
+               + `?app_id=${appId}&app_key=${appKey}&group=no&nextbuses=yes&limit=12`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+
+  const cur  = new Date().getHours() * 60 + new Date().getMinutes();
+  const deps = (data.departures?.all || []).map(d => {
+    const time      = d.best_departure_estimate || d.aimed_departure_time || '??:??';
+    const cancelled = d.status?.cancellation?.value === true;
+    const live      = !!(d.expected_departure_time && d.expected_departure_time !== d.aimed_departure_time);
+    return { route: d.line, mins: toMins(time), time, dest: d.direction || '', cancelled, live };
+  }).filter(d => d.mins >= cur).sort((a, b) => a.mins - b.mins);
+
+  localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), deps }));
+  return deps;
+}
+
+// Fallback: estimate from fixed schedule
+function scheduledBuses() {
+  const now  = new Date(), cur = now.getHours()*60 + now.getMinutes();
   const isWe = now.getDay()===0 || now.getDay()===6;
   const rows = [];
-
-  // Buses (always available)
   for (const [route, s] of Object.entries(BUS_SCHEDULE)) {
     const iv = isWe ? s.we : s.interval;
     let t = toMins(s.first);
     while (t <= toMins(s.last)) {
-      if (t >= cur) rows.push({
-        mins: t,
-        html: `<div class="dep-row">
-          <span class="bus-badge">${route}</span>
-          <span class="dep-time" style="color:var(--text)">${toTime(t)}</span>
-          <span class="dep-dest">${s.dest}</span>
-        </div>`
-      });
+      if (t >= cur) rows.push({ route, mins: t, time: toTime(t), dest: s.dest, cancelled: false, live: false });
       t += iv;
     }
   }
+  return rows.sort((a, b) => a.mins - b.mins);
+}
 
-  // Trains (async — missing is fine, buses still show)
+async function renderTransport() {
+  const wrap = document.getElementById('transport-wrap');
+  const rows = [];
+
+  // Buses — live if ATCO codes set, otherwise estimated schedule
+  const atco45 = localStorage.getItem('busAtco45');
+  const atco49 = localStorage.getItem('busAtco49') || '43000401501';
+  const atcos  = [...new Set([atco45, atco49].filter(Boolean))];
+
+  if (atcos.length) {
+    const results = await Promise.allSettled(atcos.map(a => fetchLiveBuses(a)));
+    results.forEach(r => { if (r.status === 'fulfilled') rows.push(...r.value); });
+    if (!rows.length) rows.push(...scheduledBuses()); // all fetches failed
+  } else {
+    rows.push(...scheduledBuses());
+  }
+
+  // Trains (live, no cache — refreshes every minute)
   try {
     const res  = await fetch('https://huxley2.azurewebsites.net/departures/KNN/12');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const bhm  = (data.trainServices || []).filter(s => {
-      const d = (s.destination || [{}])[0];
-      return /Birmingham/i.test(d.locationName || '') || /Birmingham/i.test(d.via || '');
+    (data.trainServices || []).filter(s => {
+      const d = (s.destination||[{}])[0];
+      return /Birmingham/i.test(d.locationName||'') || /Birmingham/i.test(d.via||'');
+    }).forEach(s => {
+      const sched = s.std || '??:??', etd = s.etd || '';
+      const dest  = /Birmingham/i.test((s.destination||[{}])[0].locationName||'') ? 'Town' : 'via Town';
+      let st;
+      if      (etd==='On time')   st = `<span class="dep-ok">●</span>`;
+      else if (etd==='Cancelled') st = `<span class="dep-can">✕</span>`;
+      else if (etd==='Delayed')   st = `<span class="dep-del">▲</span>`;
+      else                        st = `<span class="dep-del">${etd}</span>`;
+      rows.push({ mins: toMins(sched), _html:
+        `<div class="dep-row"><span class="trn-badge">TRN</span><span class="dep-time">${sched}</span><span class="dep-dest">${dest}</span>${st}</div>` });
     });
-    for (const s of bhm) {
-      const sched    = s.std || '??:??';
-      const etd      = s.etd || '';
-      const destName = (s.destination || [{}])[0].locationName || '';
-      const dest     = /Birmingham/i.test(destName) ? 'Town' : 'via Town';
-      let status;
-      if      (etd === 'On time')   status = `<span class="dep-ok">●</span>`;
-      else if (etd === 'Cancelled') status = `<span class="dep-can">✕</span>`;
-      else if (etd === 'Delayed')   status = `<span class="dep-del">▲</span>`;
-      else                          status = `<span class="dep-del">${etd}</span>`;
-      rows.push({
-        mins: toMins(sched),
-        html: `<div class="dep-row">
-          <span class="trn-badge">TRN</span>
-          <span class="dep-time">${sched}</span>
-          <span class="dep-dest">${dest}</span>
-          ${status}
-        </div>`
-      });
-    }
-  } catch { /* trains down — buses still render */ }
+  } catch {}
 
   rows.sort((a, b) => a.mins - b.mins);
   const next = rows.slice(0, 6);
-  if (!next.length) {
-    wrap.innerHTML = `<div class="quip-main">No more services today.</div>`;
-    return;
-  }
-  wrap.innerHTML = next.map(r => r.html).join('');
+  if (!next.length) { wrap.innerHTML = `<div class="quip-main">No more services today.</div>`; return; }
+
+  wrap.innerHTML = next.map(r => {
+    if (r._html) return r._html;
+    const live = r.live ? `<span class="dep-ok">●</span>` : r.cancelled ? `<span class="dep-can">✕</span>` : '';
+    return `<div class="dep-row"><span class="bus-badge">${r.route}</span><span class="dep-time" style="color:var(--text)">${r.time}</span><span class="dep-dest">${r.dest}</span>${live}</div>`;
+  }).join('');
 }
 renderTransport(); setInterval(renderTransport, 60*1000);
+
+// ── Bus stop settings ──────────────────────────────────────────
+document.getElementById('bus-cog').onclick = () => {
+  const a45 = prompt('ATCO code for route 45 stop\n(leave blank to use estimated schedule)', localStorage.getItem('busAtco45') || '');
+  if (a45 === null) return;
+  const a49 = prompt('ATCO code for route 49 stop\n(default: 43000401501 = opp Cadbury College → Rubery)', localStorage.getItem('busAtco49') || '43000401501');
+  if (a49 === null) return;
+  if (a45.trim()) localStorage.setItem('busAtco45', a45.trim()); else localStorage.removeItem('busAtco45');
+  localStorage.setItem('busAtco49', a49.trim() || '43000401501');
+  // Clear stale cache
+  Object.keys(localStorage).filter(k => k.startsWith('busLive_')).forEach(k => localStorage.removeItem(k));
+  renderTransport();
+};
 
 // ═══════════════════════════════════════════════════════════════
 //  RSS — race 3 proxies, take the winner
