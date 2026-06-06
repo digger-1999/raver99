@@ -713,8 +713,9 @@ const CAL_KEY = 'gcalIcal';
 
 function promptForCal() {
   const url = prompt(
-    'Paste your Google Calendar “Secret address in iCal format”.\n' +
-    '(Google Calendar → Settings → click your calendar → Integrate calendar)\n\n' +
+    'Paste your Google Calendar iCal URL(s).\n' +
+    'Multiple calendars: one URL per line.\n' +
+    '(Google Calendar → Settings → click a calendar → Integrate calendar → “Secret address in iCal format”)\n\n' +
     'Stored only in this browser. Leave blank to disconnect.',
     localStorage.getItem(CAL_KEY) || '');
   if (url === null) return;
@@ -810,7 +811,7 @@ function collectOccurrences(evs) {
     }
   }
   out.sort((a, b) => a.date - b.date);
-  return out.slice(0, 6);
+  return out;
 }
 
 function calWhen(o, startToday) {
@@ -821,24 +822,35 @@ function calWhen(o, startToday) {
 }
 
 async function fetchCalendar() {
-  const wrap = document.getElementById('cal-wrap');
-  const url  = localStorage.getItem(CAL_KEY);
-  if (!url) {
+  const wrap   = document.getElementById('cal-wrap');
+  const stored = localStorage.getItem(CAL_KEY);
+  if (!stored) {
     wrap.innerHTML = `<button class="cal-connect" id="cal-connect">＋ Connect Google Calendar</button>`;
     document.getElementById('cal-connect').onclick = promptForCal;
     return;
   }
+  // Support multiple calendars — one URL per line
+  const urls = stored.split('\n').map(u => u.trim()).filter(Boolean);
   try {
-    const txt = await Promise.any(proxyUrls(url).map(tryProxyText));
-    const occ = collectOccurrences(parseEvents(txt));
+    const results = await Promise.allSettled(
+      urls.map(url => Promise.any(proxyUrls(url).map(tryProxyText)))
+    );
+    const allOcc = results
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => collectOccurrences(parseEvents(r.value)));
+    if (!results.some(r => r.status === 'fulfilled')) throw new Error('all failed');
+
     const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+    allOcc.sort((a, b) => a.date - b.date);
+    const occ = allOcc.slice(0, 6);
+
     if (!occ.length) { wrap.innerHTML = `<div class="empty-note">Nothing in the next 24h — enjoy it.</div>`; return; }
     wrap.innerHTML = `<div class="cal-list">` + occ.map(o => `
       <div class="cal-item${o.allday ? ' allday' : ''}">
         <span class="cal-when">${calWhen(o, startToday)}</span>
         <span class="cal-title">${o.summary || '(no title)'}</span>
       </div>`).join('') + `</div>`;
-  } catch (e) {
+  } catch {
     wrap.innerHTML = `<div class="quip-main">Calendar unreachable.</div>
       <div class="quip-sub">Check the link · <a href="#" id="cal-retry" style="color:var(--accent)">edit</a></div>`;
     const r = document.getElementById('cal-retry');
